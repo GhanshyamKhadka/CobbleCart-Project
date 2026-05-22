@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Confirmation — Cobble Cart</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .invoice-wrapper {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+    .success-banner {
+      background: #e8f5e9;
+      border: 1px solid #a5d6a7;
+      border-radius: 10px;
+      padding: 24px;
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .success-banner .tick {
+      font-size: 40px;
+      margin-bottom: 10px;
+    }
+    .success-banner h2 { font-size: 22px; font-weight: 700; color: #2e7d32; margin-bottom: 6px; }
+    .success-banner p { font-size: 14px; color: #388e3c; }
+    .invoice-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 28px;
+      margin-bottom: 20px;
+    }
+    .invoice-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .invoice-header .logo { font-size: 20px; font-weight: 700; color: var(--dark); }
+    .invoice-header .logo em { color: var(--orange); font-style: normal; }
+    .invoice-header .order-info { text-align: right; font-size: 13px; color: var(--grey-mid); }
+    .invoice-header .order-info strong { color: var(--dark); font-size: 15px; display: block; }
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    .info-block h4 { font-size: 12px; text-transform: uppercase; color: var(--grey-mid); letter-spacing: 0.4px; margin-bottom: 8px; }
+    .info-block p { font-size: 14px; color: var(--dark); }
+    .invoice-table th { background: var(--grey-light); }
+    .invoice-totals { margin-top: 16px; }
+    .total-line { display: flex; justify-content: space-between; font-size: 14px; padding: 6px 0; }
+    .total-line.grand { font-size: 16px; font-weight: 700; padding-top: 10px; border-top: 1px solid var(--border); margin-top: 6px; }
+    .collection-info {
+      background: #FFF3DC;
+      border: 1px solid var(--orange-light);
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+    }
+    .collection-info h4 { font-size: 13px; font-weight: 600; color: var(--orange-dark); margin-bottom: 8px; }
+    .collection-info p { font-size: 13px; color: var(--orange-dark); }
+    .print-btn { display: inline-flex; align-items: center; gap: 8px; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+            <a href="../index.html" class="navbar-logo">
+      <img src="../images/logo-full.png" class="site-logo" alt="Cobble Cart">
+    </a>
+      <a href="../index.html" class="site-name">Cobble<em>Cart</em></a>
+    </div>
+    <div class="navbar-actions">
+      <a href="home.html" class="btn btn-outline">Continue shopping</a>
+    </div>
+  </nav>
+
+  <div class="invoice-wrapper">
+
+    <!-- Success banner -->
+    <div class="success-banner">
+      <div class="tick">✓</div>
+      <h2>Order confirmed!</h2>
+      <p>Thank you for your order. A confirmation email has been sent to your registered address.</p>
+    </div>
+
+    <!-- Collection reminder -->
+    <div class="collection-info">
+      <h4>Your collection slot</h4>
+      <p><strong id="inv-slot">—</strong></p>
+      <p style="margin-top:4px;">Collection point: Cleckhuddersfax Local Market, High Street. Please bring your order ID when collecting.</p>
+    </div>
+
+    <!-- Invoice -->
+    <div class="invoice-card">
+      <div class="invoice-header">
+        <div>
+          <div class="logo">Cobble<em>Cart</em></div>
+          <div style="font-size:12px;color:var(--grey-mid);margin-top:4px;">Cleckhuddersfax Local Market</div>
+        </div>
+        <div class="order-info">
+          <strong id="inv-order-id">Order #—</strong>
+          <span id="inv-order-date">—</span>
+        </div>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-block">
+          <h4>Customer</h4>
+          <p id="inv-customer-name">—</p>
+          <p id="inv-customer-email">—</p>
+        </div>
+        <div class="info-block">
+          <h4>Collection slot</h4>
+          <p id="inv-slot-date">—</p>
+          <p id="inv-slot-time">—</p>
+        </div>
+        <div class="info-block">
+          <h4>Payment method</h4>
+          <p id="inv-payment-method">—</p>
+          <p id="inv-payment-status" style="font-size:12px;color:var(--grey-mid);">—</p>
+        </div>
+        <div class="info-block">
+          <h4>Order status</h4>
+          <span class="badge" id="inv-order-status">—</span>
+        </div>
+      </div>
+
+      <!-- Items table -->
+      <table class="invoice-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Shop</th>
+            <th>Qty</th>
+            <th>Unit price</th>
+            <th style="text-align:right;">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody id="inv-items-body">
+          <tr><td colspan="5" style="text-align:center;color:#888;padding:24px;">Loading…</td></tr>
+        </tbody>
+      </table>
+
+      <div class="invoice-totals">
+        <div class="total-line"><span>Subtotal</span><span id="inv-subtotal">—</span></div>
+        <div class="total-line"><span>Delivery</span><span>Free — collection</span></div>
+        <div class="total-line grand"><span>Total paid</span><span id="inv-total">—</span></div>
+      </div>
+    </div>
+
+    <!-- Per-trader payout split (visible when paid) -->
+    <div class="invoice-card" id="inv-payouts-card" style="display:none;">
+      <h3 style="font-size:15px;font-weight:600;margin-bottom:6px;">Payout breakdown</h3>
+      <p style="font-size:12px;color:var(--grey-mid);margin-bottom:14px;">
+        Your single payment is split between the shops below. The platform settles each trader for their portion separately.
+      </p>
+      <table class="invoice-table">
+        <thead>
+          <tr>
+            <th>Shop</th>
+            <th>Trader PayPal</th>
+            <th style="text-align:right;">Owed to trader</th>
+            <th>Settlement</th>
+          </tr>
+        </thead>
+        <tbody id="inv-payouts-body"></tbody>
+      </table>
+    </div>
+
+    <!-- Actions -->
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <button onclick="window.print()" class="btn btn-dark print-btn">Print invoice</button>
+      <a href="profile.html" class="btn btn-grey">View my orders</a>
+      <a href="home.html" class="btn btn-primary">Continue shopping</a>
+    </div>
+  </div>
+
+  <footer class="footer" style="margin-top:40px;">
+    <div class="footer-bottom">&copy; 2026 Cobble Cart. All rights reserved.</div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+  <script>
+    localStorage.removeItem('cobblecart_cart');
+
+    function fmtCurrency(n) {
+      const num = Number(n) || 0;
+      return '$' + num.toFixed(2);
+    }
+    function fmtDate(iso) {
+      if (!iso) return '—';
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return iso;
+      return d.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    }
+
+    async function loadInvoice() {
+      const params = new URLSearchParams(window.location.search);
+      const orderId = params.get('order_id') || localStorage.getItem('cc_last_order');
+      if (!orderId) {
+        document.querySelector('.success-banner h2').textContent = 'No order to show';
+        document.querySelector('.success-banner p').textContent = 'Go to your profile to see past orders.';
+        document.getElementById('inv-items-body').innerHTML =
+          '<tr><td colspan="5" style="text-align:center;color:#888;padding:24px;">No order ID provided.</td></tr>';
+        return;
+      }
+
+      try {
+        const res = await fetch('../../api/get-order.php?order_id=' + encodeURIComponent(orderId), {
+          credentials: 'include'
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || ('HTTP ' + res.status));
+        }
+        const o = data.order;
+        const items = data.items || [];
+
+        document.getElementById('inv-order-id').textContent = 'Order #CC-' + o.ORDER_ID;
+        document.getElementById('inv-order-date').textContent = fmtDate(o.ORDER_DATE);
+        document.getElementById('inv-customer-name').textContent =
+          ((o.FIRST_NAME || '') + ' ' + (o.LAST_NAME || '')).trim();
+        document.getElementById('inv-customer-email').textContent = o.EMAIL || '—';
+        document.getElementById('inv-slot-date').textContent = fmtDate(o.COLLECTION_DATE);
+        document.getElementById('inv-slot-time').textContent = o.TIME_SLOT || '—';
+        document.getElementById('inv-slot').textContent =
+          (o.COLLECTION_DATE ? fmtDate(o.COLLECTION_DATE) : 'Slot pending')
+          + (o.TIME_SLOT ? ' — ' + o.TIME_SLOT : '');
+        document.getElementById('inv-payment-method').textContent = o.PAYMENT_METHOD || 'Pending';
+        document.getElementById('inv-payment-status').textContent =
+          o.PAYMENT_STATUS ? ('Payment ' + o.PAYMENT_STATUS.toLowerCase()) : 'Awaiting payment';
+
+        const statusEl = document.getElementById('inv-order-status');
+        statusEl.textContent = o.STATUS;
+        statusEl.classList.add(o.STATUS === 'PAID' ? 'badge-success'
+          : o.STATUS === 'CANCELLED' ? 'badge-danger' : 'badge-warning');
+
+        document.getElementById('inv-items-body').innerHTML = items.map(i => `
+          <tr>
+            <td>${i.PRODUCT_NAME}</td>
+            <td>${i.SHOP_NAME}</td>
+            <td>${i.QUANTITY}</td>
+            <td>${fmtCurrency(i.UNIT_PRICE)}</td>
+            <td style="text-align:right;">${fmtCurrency(i.SUBTOTAL)}</td>
+          </tr>
+        `).join('');
+
+        const subtotal = items.reduce((s, i) => s + Number(i.SUBTOTAL || 0), 0);
+        document.getElementById('inv-subtotal').textContent = fmtCurrency(subtotal);
+        document.getElementById('inv-total').textContent = fmtCurrency(o.TOTAL_AMOUNT);
+
+        // Render the per-trader payout split (only meaningful when the order is paid)
+        const payouts = data.payouts || [];
+        if (payouts.length > 0 && o.STATUS === 'PAID') {
+          document.getElementById('inv-payouts-card').style.display = 'block';
+          document.getElementById('inv-payouts-body').innerHTML = payouts.map(p => `
+            <tr>
+              <td>${p.SHOP_NAME}</td>
+              <td style="font-size:12px;color:#555;">${p.PAYPAL_EMAIL || '—'}</td>
+              <td style="text-align:right;">${fmtCurrency(p.GROSS_AMOUNT)}</td>
+              <td><span class="badge ${p.PAYOUT_STATUS === 'PAID' ? 'badge-success' : 'badge-warning'}">${p.PAYOUT_STATUS}</span></td>
+            </tr>
+          `).join('');
+        }
+
+        if (o.STATUS !== 'PAID') {
+          document.querySelector('.success-banner').style.background = '#fff8e1';
+          document.querySelector('.success-banner').style.borderColor = '#ffd54f';
+          document.querySelector('.success-banner h2').textContent =
+            o.STATUS === 'PENDING_PAYMENT' ? 'Awaiting payment' : (o.STATUS + ' order');
+          document.querySelector('.success-banner h2').style.color = '#f57c00';
+          document.querySelector('.success-banner p').textContent =
+            o.STATUS === 'PENDING_PAYMENT'
+              ? 'You have an unpaid order. Please complete the PayPal step from the cart.'
+              : 'This order is no longer active.';
+        }
+      } catch (err) {
+        document.getElementById('inv-items-body').innerHTML =
+          '<tr><td colspan="5" style="text-align:center;color:#c62828;padding:24px;">Unable to load order: '
+          + err.message + '</td></tr>';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadInvoice);
+  </script>
+</body>
+</html>

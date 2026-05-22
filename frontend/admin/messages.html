@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Messages — Cobble Cart Admin</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .msg-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+    }
+    .msg-card.new { border-left: 4px solid var(--orange); }
+    .msg-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; }
+    .msg-head h3 { font-size: 14px; font-weight: 700; margin: 0; color: var(--dark); }
+    .msg-meta { font-size: 12px; color: var(--grey-mid); margin-top: 2px; }
+    .msg-subject { font-size: 13px; font-weight: 600; color: var(--orange-dark); margin: 10px 0 4px; }
+    .msg-body { font-size: 13px; color: var(--grey-dark); line-height: 1.6; white-space: pre-wrap; }
+    .msg-reply {
+      background: #f0f7f0; border: 1px solid #c5e0c5; border-radius: 8px;
+      padding: 10px 12px; margin-top: 10px; font-size: 12.5px; color: #2e5e2e; white-space: pre-wrap;
+    }
+    .reply-box { margin-top: 10px; }
+    .reply-box textarea {
+      width: 100%; box-sizing: border-box; min-height: 70px; padding: 9px 11px;
+      border: 1px solid var(--border); border-radius: 6px; font-family: var(--font); font-size: 13px;
+    }
+    .empty, .err { text-align: center; padding: 40px; font-size: 13.5px; }
+    .empty { color: #888; } .err { color: #c62828; }
+    .filter-tabs { display: flex; gap: 8px; margin-bottom: 18px; }
+    .filter-tabs button {
+      padding: 7px 16px; border: 1px solid var(--border); background: var(--white);
+      border-radius: 6px; font-size: 13px; cursor: pointer; font-family: var(--font);
+    }
+    .filter-tabs button.active { background: var(--orange); border-color: var(--orange); color: var(--white); font-weight: 600; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+            <a href="../index.html" class="navbar-logo">
+      <img src="../images/logo-full.png" class="site-logo" alt="Cobble Cart">
+    </a>
+      <span class="site-name">Cobble<em>Cart</em></span>
+      <span style="font-size:11px;color:#aaa;background:#333;padding:2px 8px;border-radius:3px;margin-left:4px;">Admin Panel</span>
+    </div>
+    <div class="navbar-actions">
+      <span style="font-size:13px;color:#ccc;">Admin</span>
+      <a href="#" onclick="logout(); return false;" class="btn btn-outline" style="font-size:13px;padding:6px 14px;">Log out</a>
+    </div>
+  </nav>
+
+  <div class="layout-with-sidebar">
+    <div class="sidebar">
+      <div class="sidebar-label">Admin menu</div>
+      <a class="sidebar-link" href="dashboard.html">Dashboard</a>
+      <a class="sidebar-link" href="trader-management.html">Trader management</a>
+      <a class="sidebar-link" href="add-trader.html">Add trader</a>
+      <a class="sidebar-link" href="customer-management.html">Customer management</a>
+      <a class="sidebar-link" href="slots.html">Collection slots</a>
+      <a class="sidebar-link" href="orders.html">All orders</a>
+      <a class="sidebar-link active" href="messages.html">Messages</a>
+      <a class="sidebar-link" href="reset-passwords.html">Reset passwords</a>
+    </div>
+
+    <div class="main-content">
+      <div class="page-header">
+        <div>
+          <h1>Messages</h1>
+          <p>Customer enquiries sent through the Contact form. Reply and the customer is emailed.</p>
+        </div>
+        <span id="total-pill" style="font-size:13px;color:var(--grey-mid);background:var(--grey-light);border:1px solid var(--border);padding:6px 14px;border-radius:6px;">Loading…</span>
+      </div>
+
+      <div class="filter-tabs">
+        <button class="active" data-filter="" onclick="setFilter(this,'')">All</button>
+        <button data-filter="NEW" onclick="setFilter(this,'NEW')">New</button>
+        <button data-filter="REPLIED" onclick="setFilter(this,'REPLIED')">Replied</button>
+      </div>
+
+      <div id="messages-list"><div class="empty">Loading messages…</div></div>
+    </div>
+  </div>
+
+  <script src="../js/main.js"></script>
+  <script>
+    let currentFilter = '';
+    function escapeHtml(s){return String(s ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+    function setFilter(btn, f) {
+      currentFilter = f;
+      document.querySelectorAll('.filter-tabs button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      loadMessages();
+    }
+
+    async function loadMessages() {
+      const list = document.getElementById('messages-list');
+      list.innerHTML = '<div class="empty">Loading messages…</div>';
+      try {
+        const url = '../../api/get-messages.php' + (currentFilter ? '?status=' + currentFilter : '');
+        const res = await fetch(url, { credentials: 'include' });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.success) throw new Error(data.message || ('HTTP ' + res.status));
+
+        const c = data.counts || {};
+        document.getElementById('total-pill').textContent =
+          (c.NEW_COUNT > 0 ? c.NEW_COUNT + ' new · ' : '') + (c.TOTAL || 0) + ' total';
+
+        const msgs = data.messages || [];
+        if (!msgs.length) {
+          list.innerHTML = '<div class="empty">No messages' + (currentFilter ? ' in this view' : ' yet') + '.</div>';
+          return;
+        }
+
+        list.innerHTML = msgs.map(m => {
+          const isNew = m.STATUS === 'NEW';
+          const name  = (escapeHtml(m.FIRST_NAME) + ' ' + escapeHtml(m.LAST_NAME)).trim() || '(no name)';
+          const replyBlock = m.ADMIN_REPLY
+            ? `<div class="msg-reply"><strong>Your reply (${escapeHtml(m.REPLIED_AT || '')}):</strong>\n${escapeHtml(m.ADMIN_REPLY)}</div>`
+            : `<div class="reply-box">
+                 <textarea id="reply-${m.MESSAGE_ID}" placeholder="Type your reply — the customer will be emailed…"></textarea>
+                 <button class="btn btn-primary" style="margin-top:8px;padding:6px 16px;font-size:13px;"
+                         onclick="sendReply(${m.MESSAGE_ID})">Send reply</button>
+               </div>`;
+          return `
+            <div class="msg-card ${isNew ? 'new' : ''}">
+              <div class="msg-head">
+                <div>
+                  <h3>${name}
+                    <span class="badge badge-${isNew ? 'warning' : 'success'}" style="margin-left:6px;">${m.STATUS}</span>
+                  </h3>
+                  <div class="msg-meta">${escapeHtml(m.EMAIL)}${m.ORDER_REF ? ' · order ' + escapeHtml(m.ORDER_REF) : ''} · ${escapeHtml(m.CREATED_AT || '')}</div>
+                </div>
+              </div>
+              <div class="msg-subject">${escapeHtml(m.SUBJECT)}</div>
+              <div class="msg-body">${escapeHtml(m.BODY)}</div>
+              ${replyBlock}
+            </div>`;
+        }).join('');
+      } catch (err) {
+        list.innerHTML = '<div class="err">' + escapeHtml(err.message) + '</div>';
+        document.getElementById('total-pill').textContent = '—';
+      }
+    }
+
+    async function sendReply(messageId) {
+      const ta = document.getElementById('reply-' + messageId);
+      const reply = (ta.value || '').trim();
+      if (!reply) { showAlert('Type a reply first.', 'error'); return; }
+      try {
+        const res = await fetch('../../api/reply-message.php', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message_id: messageId, reply })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.success) throw new Error(data.message || ('HTTP ' + res.status));
+        showAlert(data.message, 'success');
+        loadMessages();
+      } catch (err) {
+        showAlert('Reply failed: ' + err.message, 'error');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadMessages);
+  </script>
+</body>
+</html>

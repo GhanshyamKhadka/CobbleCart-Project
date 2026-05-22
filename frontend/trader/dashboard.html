@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trader Dashboard — Cobble Cart</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <nav class="navbar">
+            <a href="../index.html" class="navbar-logo">
+      <img src="../images/logo-full.png" class="site-logo" alt="Cobble Cart">
+    </a>
+      <span class="site-name">Cobble<em>Cart</em></span>
+      <span style="font-size:11px;color:#aaa;background:#333;padding:2px 8px;border-radius:3px;margin-left:4px;">Trader Panel</span>
+    </div>
+    <div class="navbar-actions">
+      <span id="trader-shop-name" style="font-size:13px;color:#ccc;">Smith's Butchers</span>
+      <a href="#" onclick="logout(); return false;" class="btn btn-outline" style="font-size:13px;padding:6px 14px;">Log out</a>
+    </div>
+  </nav>
+
+  <div class="layout-with-sidebar">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-label">Trader menu</div>
+      <a class="sidebar-link active" href="dashboard.html">Dashboard</a>
+      <a class="sidebar-link" href="add-product.html">Add product</a>
+      <a class="sidebar-link" href="manage-products.html">Manage products</a>
+      <a class="sidebar-link" href="reports.html?type=daily">Daily order report</a>
+      <a class="sidebar-link" href="reports.html?type=weekly">Weekly finance</a>
+      <a class="sidebar-link" href="reports.html?type=monthly">Monthly sales</a>
+      <a class="sidebar-link" href="profile-settings.html">Profile settings</a>
+      <div class="sidebar-footer">
+        <a href="#" onclick="logout(); return false;" style="font-size:13px;color:#888;">Log out</a>
+      </div>
+    </div>
+
+    <!-- Main -->
+    <div class="main-content">
+
+      <div class="page-header">
+        <div>
+          <h1>Trader Dashboard</h1>
+          <p id="trader-welcome">Welcome back — loading...</p>
+        </div>
+        <a href="add-product.html" class="btn btn-primary">+ Add product</a>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="label">Orders today</div>
+          <div class="value" id="orders-today">0</div>
+          <div class="sub">Across all slots</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Products listed</div>
+          <div class="value" id="products-listed">0</div>
+          <div class="sub">Active products</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Revenue this week</div>
+          <div class="value" id="revenue-week">$0</div>
+          <div class="sub">Delivered orders</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Pending approvals</div>
+          <div class="value" id="pending-approvals">0</div>
+          <div class="sub">Awaiting admin review</div>
+        </div>
+      </div>
+
+      <div class="table-wrapper" style="margin-bottom:24px;">
+        <div style="padding:16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:14px;font-weight:600;">My products</span>
+          <a href="add-product.html" class="btn btn-small">Add new</a>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Price</th>
+              <th>Stock</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="trader-product-list">
+            <tr>
+              <td colspan="4" style="text-align:center;color:#888;padding:30px;">Loading products…</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Two column layout -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+
+        <!-- Today's orders -->
+        <div>
+          <h3 style="font-size:16px;font-weight:600;margin-bottom:14px;">Today's orders</h3>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Products</th>
+                  <th>Slot</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="trader-orders-body">
+                <tr>
+                  <td colspan="4" style="text-align:center;color:#888;padding:30px;">Loading orders…</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Stock levels -->
+        <div>
+          <h3 style="font-size:16px;font-weight:600;margin-bottom:14px;">Stock levels</h3>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Stock</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="stock-levels-body">
+                <tr>
+                  <td colspan="3" style="text-align:center;color:#888;padding:30px;">Loading stock levels…</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="../js/main.js"></script>
+  <script>
+    const DEV_TRADER_ORDERS = {
+      2: [
+        { id: '#CC-2101', products: 'Ribeye Steak x1', slot: '10:00–13:00', status: 'Confirmed', amount: 12.50 },
+        { id: '#CC-2102', products: 'Pork Sausages x2', slot: '13:00–16:00', status: 'Pending', amount: 9.60 },
+        { id: '#CC-2103', products: 'Ribeye Steak x2', slot: '16:00–19:00', status: 'Confirmed', amount: 25.00 }
+      ],
+      3: [
+        { id: '#CC-3101', products: 'Organic Carrots x2', slot: '10:00–13:00', status: 'Confirmed', amount: 2.40 },
+        { id: '#CC-3102', products: 'Mixed Salad Bag x1', slot: '13:00–16:00', status: 'Pending', amount: 2.50 }
+      ],
+      4: [
+        { id: '#CC-4101', products: 'Fresh Salmon Fillet x1', slot: '10:00–13:00', status: 'Confirmed', amount: 8.00 },
+        { id: '#CC-4102', products: 'Cod Loins x1', slot: '16:00–19:00', status: 'Confirmed', amount: 6.50 }
+      ],
+      5: [
+        { id: '#CC-5101', products: 'Sourdough Loaf x2', slot: '10:00–13:00', status: 'Confirmed', amount: 7.60 },
+        { id: '#CC-5102', products: 'Croissants x4', slot: '13:00–16:00', status: 'Pending', amount: 12.80 }
+      ],
+      6: [
+        { id: '#CC-6101', products: 'Aged Cheddar x1', slot: '10:00–13:00', status: 'Confirmed', amount: 5.50 },
+        { id: '#CC-6102', products: 'Prosciutto x1', slot: '16:00–19:00', status: 'Pending', amount: 4.80 }
+      ]
+    };
+
+    const ORDER_STATUS_CLASSES = {
+      Confirmed: 'success',
+      Pending: 'warning',
+      Cancelled: 'danger'
+    };
+
+    function getStockStatus(quantity) {
+      return quantity <= 2 ? 'Low' : 'Good';
+    }
+
+    async function renderTraderOrders(shopId) {
+      const body = document.getElementById('trader-orders-body');
+      const adminShopId = getAdminShopOverride();
+      const qs = (adminShopId ? '&shop_id=' + adminShopId : '');
+      try {
+        // Real daily orders for this shop
+        const dailyRes = await fetch('../../api/get-trader-report.php?type=daily' + qs, { credentials: 'include' });
+        const daily = await dailyRes.json().catch(() => ({}));
+        if (!dailyRes.ok || !daily.success) throw new Error(daily.message || 'Daily report failed');
+
+        const todays = daily.orders || [];
+        if (todays.length === 0) {
+          body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#888;padding:30px;">No orders today.</td></tr>';
+        } else {
+          body.innerHTML = todays.map(o => {
+            const statusKey = String(o.STATUS || '').toUpperCase();
+            const cls = statusKey === 'PAID'             ? 'success'
+                      : statusKey === 'CANCELLED'        ? 'danger'
+                      : statusKey === 'PENDING_PAYMENT'  ? 'warning'
+                      : 'success';
+            return `
+              <tr>
+                <td>#CC-${o.ORDER_ID}</td>
+                <td>${o.CUSTOMER_NAME || '—'}</td>
+                <td>${o.TIME_SLOT || '—'}</td>
+                <td><span class="badge badge-${cls}">${statusKey}</span></td>
+              </tr>`;
+          }).join('');
+        }
+        document.getElementById('orders-today').textContent = todays.length;
+
+        // Weekly revenue for the "Revenue this week" card
+        const weeklyRes = await fetch('../../api/get-trader-report.php?type=weekly' + qs, { credentials: 'include' });
+        const weekly = await weeklyRes.json().catch(() => ({}));
+        const weekRows = (weekly.orders || []);
+        const weekRevenue = weekRows.reduce((s, r) => s + Number(r.SUBTOTAL || 0), 0);
+        document.getElementById('revenue-week').textContent = '$' + weekRevenue.toFixed(2);
+      } catch (e) {
+        body.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#c62828;padding:30px;">${e.message}</td></tr>`;
+        document.getElementById('orders-today').textContent = '0';
+        document.getElementById('revenue-week').textContent = '$0.00';
+      }
+    }
+
+    function renderStockLevels(products) {
+      const body = document.getElementById('stock-levels-body');
+      if (!products.length) {
+        body.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#888;padding:30px;">No stock data available.</td></tr>';
+        return;
+      }
+      const sorted = [...products]
+        .sort((a, b) => (b.STOCK_QUANTITY || b.stock_quantity || 0) - (a.STOCK_QUANTITY || a.stock_quantity || 0))
+        .slice(0, 5);
+      body.innerHTML = sorted.map(product => {
+        const name = product.NAME || product.name || 'Unknown product';
+        const qty = product.STOCK_QUANTITY || product.stock_quantity || 0;
+        const status = getStockStatus(qty);
+        return `
+          <tr>
+            <td>${name}</td>
+            <td>${qty} ${qty === 1 ? 'unit' : 'units'}</td>
+            <td><span class="badge badge-${status === 'Good' ? 'success' : 'danger'}">${status}</span></td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // When admin opens trader/dashboard.html?shop_id=N from trader-management.html,
+    // every fetch + sidebar link forwards that shop_id so the whole UI is scoped to
+    // the chosen trader. Falls back to the logged-in trader's own shop when absent.
+    function getAdminShopOverride() {
+      const v = parseInt(new URLSearchParams(window.location.search).get('shop_id'), 10);
+      return Number.isInteger(v) && v > 0 ? v : null;
+    }
+
+    async function applyTraderProfile() {
+      const user = getCurrentUser();
+      if (!user) return;
+      const role = String(user.role).toLowerCase();
+      const adminShopId = getAdminShopOverride();
+
+      // Admin is acting-as a specific trader: fetch that trader's identity and
+      // display it, plus a clear banner.
+      if (role === 'admin' && adminShopId) {
+        try {
+          const r = await fetch('../../api/get-traders.php', { credentials: 'include' });
+          const d = await r.json();
+          const t = (d.traders || []).find(x => Number(x.SHOP_ID) === adminShopId);
+          if (t) {
+            document.getElementById('trader-shop-name').textContent = t.SHOP_NAME;
+            document.getElementById('trader-welcome').textContent =
+              `Admin view — ${t.SHOP_NAME} (${t.NAME}, ${t.EMAIL})`;
+            showAdminBanner(adminShopId, t.SHOP_NAME);
+            patchSidebarLinksForAdmin(adminShopId);
+            return;
+          }
+        } catch (e) { /* fall through to default */ }
+      }
+
+      if (role !== 'trader') return;
+      const shop = user.shop || {};
+      const shopName = shop.shop_name || user.name || 'Trader Shop';
+      document.getElementById('trader-shop-name').textContent = shopName;
+      document.getElementById('trader-welcome').textContent =
+        `Welcome back, ${shopName} — ${new Date().toLocaleDateString()}`;
+    }
+
+    function showAdminBanner(shopId, shopName) {
+      const banner = document.createElement('div');
+      banner.style.cssText = 'background:#fff8ee;border:1px solid #f0d99a;color:#8a6512;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;';
+      banner.innerHTML = `🔧 Viewing as <strong>admin</strong> — scoped to shop <strong>${shopName}</strong> (id ${shopId}). ` +
+        `<a href="../admin/trader-management.html" style="color:#8a6512;text-decoration:underline;">Back to trader management</a>`;
+      const header = document.querySelector('.page-header');
+      header.parentNode.insertBefore(banner, header);
+    }
+
+    function patchSidebarLinksForAdmin(shopId) {
+      // Every internal trader link should carry the shop_id while admin is acting-as.
+      document.querySelectorAll('.sidebar a[href]').forEach(a => {
+        const href = a.getAttribute('href');
+        if (href === '#' || /^https?:|^javascript:|^mailto:/i.test(href)) return;
+        const sep = href.includes('?') ? '&' : '?';
+        a.setAttribute('href', href + sep + 'shop_id=' + shopId);
+      });
+      // The "+ Add product" header button too
+      const addBtn = document.querySelector('.page-header .btn-primary');
+      if (addBtn) {
+        const href = addBtn.getAttribute('href') || 'add-product.html';
+        const sep  = href.includes('?') ? '&' : '?';
+        addBtn.setAttribute('href', href + sep + 'shop_id=' + shopId);
+      }
+    }
+
+    async function loadTraderProducts() {
+      const user = getCurrentUser();
+      if (!user) return;
+      const role = String(user.role).toLowerCase();
+      const adminShopId = getAdminShopOverride();
+
+      // Determine which shop to load:
+      //  - admin + ?shop_id=N  → that shop
+      //  - trader              → their own shop_id
+      let shopId = null;
+      if (role === 'admin' && adminShopId) {
+        shopId = adminShopId;
+      } else if (role === 'trader') {
+        shopId = user.shop?.shop_id || null;
+        if (!shopId) {
+          const res = await fetch('../../api/current-user.php', { credentials: 'include' });
+          const data = await res.json();
+          if (data.success && data.user.shop) shopId = data.user.shop.shop_id;
+        }
+      }
+      if (!shopId) return;
+
+      try {
+        const res = await fetch(`../../api/get-products.php?shop_id=${shopId}`, { credentials: 'include' });
+        const data = await res.json();
+        if (!data.success || !Array.isArray(data.products)) {
+          throw new Error(data.message || 'Failed to load products');
+        }
+        populateTraderProducts(data.products, shopId);
+      } catch (error) {
+        document.getElementById('trader-product-list').innerHTML = `<tr><td colspan="4" style="text-align:center;color:#c62828;padding:30px;">${error.message}</td></tr>`;
+      }
+    }
+
+    function populateTraderProducts(products, shopId) {
+      const rows = products.map(product => {
+        const name = product.NAME || product.name || 'Unknown product';
+        const priceMarkup = renderPrice(product);
+        const stock = product.STOCK_QUANTITY || product.stock_quantity || 'N/A';
+        const status = product.APPROVAL_STATUS || product.approval_status || 'PENDING';
+        return `
+          <tr>
+            <td>${name}</td>
+            <td>${priceMarkup}</td>
+            <td>${stock}</td>
+            <td><span class="badge badge-${status === 'APPROVED' ? 'success' : 'warning'}">${status}</span></td>
+          </tr>
+        `;
+      }).join('');
+      document.getElementById('trader-product-list').innerHTML = rows || '<tr><td colspan="4" style="text-align:center;color:#888;padding:30px;">No products found</td></tr>';
+      document.getElementById('products-listed').textContent = products.length;
+      const pending = products.filter(p => (p.APPROVAL_STATUS || p.approval_status || 'PENDING') === 'PENDING').length;
+      document.getElementById('pending-approvals').textContent = pending;
+      renderTraderOrders(shopId);
+      renderStockLevels(products);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      applyTraderProfile();
+      loadTraderProducts();
+    });
+  </script>
+</body>
+</html>

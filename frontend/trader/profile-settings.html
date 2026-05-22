@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile Settings — Cobble Cart</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <nav class="navbar">
+            <a href="../index.html" class="navbar-logo">
+      <img src="../images/logo-full.png" class="site-logo" alt="Cobble Cart">
+    </a>
+      <span class="site-name">Cobble<em>Cart</em></span>
+      <span style="font-size:11px;color:#aaa;background:#333;padding:2px 8px;border-radius:3px;margin-left:4px;">Trader Panel</span>
+    </div>
+    <div class="navbar-actions">
+      <span style="font-size:13px;color:#ccc;">Smith's Butchers</span>
+      <a href="../customer/login.html" class="btn btn-outline" style="font-size:13px;padding:6px 14px;">Log out</a>
+    </div>
+  </nav>
+
+  <div class="layout-with-sidebar">
+
+    <div class="sidebar">
+      <div class="sidebar-label">Trader menu</div>
+      <a class="sidebar-link" href="dashboard.html">Dashboard</a>
+      <a class="sidebar-link" href="add-product.html">Add product</a>
+      <a class="sidebar-link" href="manage-products.html">Manage products</a>
+      <a class="sidebar-link" href="reports.html?type=daily">Daily order report</a>
+      <a class="sidebar-link" href="reports.html?type=weekly">Weekly finance</a>
+      <a class="sidebar-link" href="reports.html?type=monthly">Monthly sales</a>
+      <a class="sidebar-link active" href="profile-settings.html">Profile settings</a>
+      <div class="sidebar-footer">
+        <a href="../customer/login.html" style="font-size:13px;color:#888;">Log out</a>
+      </div>
+    </div>
+
+    <div class="main-content">
+
+      <div class="page-header">
+        <div>
+          <h1>Profile settings</h1>
+          <p>View and update your trader account details</p>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:900px;">
+
+        <!-- Shop details -->
+        <div class="card">
+          <div class="card-title">Shop details</div>
+          <form onsubmit="saveShop(event)">
+            <div class="form-group">
+              <label>Shop name</label>
+              <input type="text" value="Smith's Butchers">
+            </div>
+            <div class="form-group">
+              <label>Shop type</label>
+              <select>
+                <option selected>Butcher</option>
+                <option>Greengrocer</option>
+                <option>Fishmonger</option>
+                <option>Bakery</option>
+                <option>Delicatessen</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Shop description</label>
+              <textarea>Family-run butchers with over 30 years of experience. Sourcing from local farms.</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Save changes</button>
+          </form>
+        </div>
+
+        <!-- Personal details -->
+        <div class="card">
+          <div class="card-title">Personal details</div>
+          <form onsubmit="savePersonal(event)">
+            <div class="form-group">
+              <label>Full name</label>
+              <input type="text" value="John Smith">
+            </div>
+            <div class="form-group">
+              <label>Email address</label>
+              <input type="email" value="john@smithsbutchers.co.uk">
+            </div>
+            <div class="form-group">
+              <label>Phone number</label>
+              <input type="tel" value="07700 900456">
+            </div>
+            <button type="submit" class="btn btn-primary">Save changes</button>
+          </form>
+        </div>
+
+        <!-- Change password -->
+        <div class="card">
+          <div class="card-title">Change password</div>
+          <form onsubmit="changePass(event)">
+            <div class="form-group">
+              <label>Current password</label>
+              <input type="password" placeholder="Enter current password">
+            </div>
+            <div class="form-group">
+              <label>New password</label>
+              <input type="password" id="password" placeholder="Minimum 8 characters">
+            </div>
+            <div class="form-group">
+              <label>Confirm new password</label>
+              <input type="password" id="confirm-password" placeholder="Re-enter new password">
+              <span class="form-error" id="pass-error"></span>
+            </div>
+            <button type="submit" class="btn btn-primary">Update password</button>
+          </form>
+        </div>
+
+        <!-- Account info -->
+        <div class="card">
+          <div class="card-title">Account information</div>
+          <div style="font-size:13px;">
+            <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+              <span style="color:var(--grey-mid);">Account status</span>
+              <span class="badge badge-success">Active</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+              <span style="color:var(--grey-mid);">Shop type</span>
+              <span>Butcher</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+              <span style="color:var(--grey-mid);">Products listed</span>
+              <span>12 of 20 max</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+              <span style="color:var(--grey-mid);">Account created</span>
+              <span>1 January 2026</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:10px 0;">
+              <span style="color:var(--grey-mid);">Last login</span>
+              <span>22 March 2026</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/main.js"></script>
+  <script>
+    function saveShop(e) { e.preventDefault(); showAlert('Shop details updated', 'success'); }
+    function savePersonal(e) { e.preventDefault(); showAlert('Personal details updated', 'success'); }
+    function changePass(e) { e.preventDefault(); if (!checkPasswordMatch()) return; showAlert('Password updated', 'success'); }
+  </script>
+</body>
+</html>

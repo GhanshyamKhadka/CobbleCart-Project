@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Product — Cobble Cart</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <nav class="navbar">
+            <a href="../index.html" class="navbar-logo">
+      <img src="../images/logo-full.png" class="site-logo" alt="Cobble Cart">
+    </a>
+      <span class="site-name">Cobble<em>Cart</em></span>
+      <span style="font-size:11px;color:#aaa;background:#333;padding:2px 8px;border-radius:3px;margin-left:4px;">Trader Panel</span>
+    </div>
+    <div class="navbar-actions">
+      <span style="font-size:13px;color:#ccc;">Smith's Butchers</span>
+      <a href="#" onclick="logout(); return false;" class="btn btn-outline" style="font-size:13px;padding:6px 14px;">Log out</a>
+    </div>
+  </nav>
+
+  <div class="layout-with-sidebar">
+
+    <div class="sidebar">
+      <div class="sidebar-label">Trader menu</div>
+      <a class="sidebar-link" href="dashboard.html">Dashboard</a>
+      <a class="sidebar-link active" href="add-product.html">Add product</a>
+      <a class="sidebar-link" href="manage-products.html">Manage products</a>
+      <a class="sidebar-link" href="reports.html?type=daily">Daily order report</a>
+      <a class="sidebar-link" href="reports.html?type=weekly">Weekly finance</a>
+      <a class="sidebar-link" href="reports.html?type=monthly">Monthly sales</a>
+      <a class="sidebar-link" href="profile-settings.html">Profile settings</a>
+      <div class="sidebar-footer">
+        <a href="#" onclick="logout(); return false;" style="font-size:13px;color:#888;">Log out</a>
+      </div>
+    </div>
+
+    <div class="main-content">
+
+      <div class="page-header">
+        <div>
+          <h1>Add product</h1>
+          <p>Add a new product to your shop listing</p>
+        </div>
+        <a href="dashboard.html" class="btn btn-grey">Back to dashboard</a>
+      </div>
+
+      <div class="card" style="max-width:760px;">
+        <form onsubmit="handleAddProduct(event)" enctype="multipart/form-data">
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Product name <span class="required">*</span></label>
+              <input type="text" name="name" placeholder="e.g. Ribeye Steak 400g" required>
+              <span class="form-error"></span>
+            </div>
+            <div class="form-group">
+              <label>Product type <span class="required">*</span></label>
+              <select name="product_type_id" required>
+                <option value="">Select type</option>
+                <option value="1">Meat</option>
+                <option value="2">Vegetables</option>
+                <option value="3">Fish</option>
+                <option value="4">Bakery</option>
+                <option value="5">Deli</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Product description <span class="required">*</span></label>
+            <textarea name="description" placeholder="Describe your product — include relevant details about sourcing, preparation, etc." required></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Item price ($) <span class="required">*</span></label>
+              <input type="number" name="price" step="0.01" min="0" placeholder="e.g. 12.50" required>
+              <span class="form-error"></span>
+            </div>
+            <div class="form-group">
+              <label>Customer offer (%)</label>
+              <input type="number" name="offer_percent" step="0.01" min="0" max="99.99" placeholder="e.g. 10">
+              <span style="font-size:12px;color:var(--grey-mid);margin-top:4px;display:block;">Optional discount shown to customers on this product.</span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Quantity per item <span class="required">*</span></label>
+              <input type="text" name="quantity_per_item" placeholder="e.g. 400g, 1 loaf, 6 pack" required>
+            </div>
+            <div class="form-group"></div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Stock available <span class="required">*</span></label>
+              <input type="number" name="stock_quantity" min="0" placeholder="e.g. 20" required>
+            </div>
+            <div class="form-group">
+              <label>Min order quantity <span class="required">*</span></label>
+              <input type="number" name="min_order" min="1" placeholder="e.g. 1" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Max order quantity <span class="required">*</span></label>
+              <input type="number" name="max_order" min="1" placeholder="e.g. 5" required>
+            </div>
+            <div class="form-group">
+              <label>Allergy information</label>
+              <input type="text" name="allergy_info" placeholder="e.g. None, Gluten, Dairy, Fish">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Product image</label>
+            <input type="file" name="product_image" accept="image/*" style="padding:8px;">
+            <span style="font-size:12px;color:var(--grey-mid);margin-top:4px;display:block;">Accepted: JPG, PNG, WEBP.</span>
+          </div>
+
+          <div class="divider"></div>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button type="submit" class="btn btn-primary">Request approval</button>
+            <button type="reset" class="btn btn-grey">Clear form</button>
+            <a href="dashboard.html" class="btn btn-grey">Cancel</a>
+          </div>
+
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="../js/main.js"></script>
+  <script>
+    // While admin is acting-as a trader, keep ?shop_id=N on every link.
+    (function preserveShopIdLinks() {
+      const sid = parseInt(new URLSearchParams(window.location.search).get('shop_id'), 10);
+      if (!Number.isInteger(sid) || sid <= 0) return;
+      document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('a[href]').forEach(a => {
+          const href = a.getAttribute('href');
+          if (!href || href === '#' || /^https?:|^javascript:|^mailto:/i.test(href) || href.startsWith('../../api/')) return;
+          if (href.startsWith('../admin/')) return;
+          if (href.includes('shop_id=')) return;
+          a.setAttribute('href', href + (href.includes('?') ? '&' : '?') + 'shop_id=' + sid);
+        });
+        const banner = document.createElement('div');
+        banner.style.cssText = 'background:#fff8ee;border:1px solid #f0d99a;color:#8a6512;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;';
+        banner.innerHTML = `🔧 Viewing as <strong>admin</strong> — adding product to shop <strong>${sid}</strong>. ` +
+          `<a href="../admin/trader-management.html" style="color:#8a6512;text-decoration:underline;">Back to trader management</a>`;
+        const target = document.querySelector('.main-content > h1, .main-content > .page-header, .main-content > form, .main-content');
+        if (target) target.parentNode.insertBefore(banner, target);
+      });
+    })();
+
+    async function handleAddProduct(e) {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+
+      showAlert('Submitting product for approval...', 'info');
+      try {
+        // Admin acting-as: include shop_id so the back end can scope upload to that shop
+        const adminShopId = parseInt(new URLSearchParams(window.location.search).get('shop_id'), 10);
+        if (Number.isInteger(adminShopId) && adminShopId > 0) {
+          formData.append('shop_id', String(adminShopId));
+        }
+
+        const response = await fetch('../../api/add-product.php', {
+          method: 'POST',
+          credentials: 'include',
+          body: formData
+        });
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || 'Unable to add product');
+        }
+        showAlert(data.message, 'success');
+        form.reset();
+        setTimeout(() => window.location.href = 'dashboard.html', 1200);
+      } catch (error) {
+        showAlert(error.message, 'error');
+      }
+    }
+  </script>
+</body>
+</html>

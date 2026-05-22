@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Us — Cobble Cart</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="icon" href="../images/logo-page.png" type="image/png">
+  <link rel="apple-touch-icon" href="../images/logo-page.png">
+  <style>
+    .contact-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+    .contact-info h2 { font-size: 26px; font-weight: 700; margin-bottom: 12px; }
+    .contact-info p { font-size: 14px; color: var(--grey-dark); margin-bottom: 28px; line-height: 1.7; }
+    .info-item {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+    .info-icon {
+      width: 40px; height: 40px;
+      background: #FFF3DC;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .info-text h4 { font-size: 13px; font-weight: 600; color: var(--dark); margin-bottom: 3px; }
+    .info-text p { font-size: 13px; color: var(--grey-mid); }
+    .collection-hours {
+      background: #FFF3DC;
+      border: 1px solid var(--orange-light);
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-top: 24px;
+    }
+    .collection-hours h4 { font-size: 13px; font-weight: 600; color: var(--orange-dark); margin-bottom: 8px; }
+    .collection-hours p { font-size: 13px; color: var(--orange-dark); margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+          <a href="../index.html" class="navbar-logo">
+      <img src="../images/logo-full.png" class="site-logo" alt="Cobble Cart">
+    </a>
+    <ul class="navbar-links">
+      <li><a href="home.html">Browse</a></li>
+      <li><a href="category.html">Categories</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <a href="login.html" class="btn btn-outline">Log in</a>
+      <a href="register.html" class="btn btn-primary">Register</a>
+    </div>
+  </nav>
+
+  <div style="background:var(--dark);padding:40px;text-align:center;color:var(--white);">
+    <h2 style="font-size:28px;font-weight:700;margin-bottom:8px;">Get in touch</h2>
+    <p style="font-size:14px;color:#aaa;">We are here to help with any questions about Cobble Cart</p>
+  </div>
+
+  <div class="contact-layout">
+
+    <!-- Info -->
+    <div class="contact-info">
+      <h2>Contact information</h2>
+      <p>Have a question about an order, collection or your account? Get in touch with the Cobble Cart team and we will get back to you as soon as possible.</p>
+
+      <div class="info-item">
+        <div class="info-icon">📧</div>
+        <div class="info-text">
+          <h4>Email</h4>
+          <p>hello@cobblecart.co.uk</p>
+        </div>
+      </div>
+
+      <div class="info-item">
+        <div class="info-icon">📍</div>
+        <div class="info-text">
+          <h4>Collection point</h4>
+          <p>Cleckhuddersfax Local Market<br>High Street, Cleckhuddersfax</p>
+        </div>
+      </div>
+
+      <div class="info-item">
+        <div class="info-icon">🕐</div>
+        <div class="info-text">
+          <h4>Collection hours</h4>
+          <p>Wednesday, Thursday, Friday only</p>
+        </div>
+      </div>
+
+      <div class="collection-hours">
+        <h4>Collection slots</h4>
+        <p>10:00 – 13:00</p>
+        <p>13:00 – 16:00</p>
+        <p>16:00 – 19:00</p>
+        <p style="margin-top:8px;font-size:12px;">Orders must be placed at least 24 hours before collection. Maximum 20 orders per slot.</p>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <div>
+      <div class="card">
+        <div class="card-title">Send us a message</div>
+        <form id="contact-form" onsubmit="handleContact(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="c-first">First name <span class="required">*</span></label>
+              <input type="text" id="c-first" name="first_name" placeholder="e.g. Sarah" required>
+            </div>
+            <div class="form-group">
+              <label for="c-last">Last name <span class="required">*</span></label>
+              <input type="text" id="c-last" name="last_name" placeholder="e.g. Jones" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="c-email">Email address <span class="required">*</span></label>
+            <input type="email" id="c-email" name="email" placeholder="e.g. sarah@email.com" required>
+          </div>
+          <div class="form-group">
+            <label for="c-order">Order number (if applicable)</label>
+            <input type="text" id="c-order" name="order_ref" placeholder="e.g. #CC-1042">
+          </div>
+          <div class="form-group">
+            <label for="c-subject">Subject <span class="required">*</span></label>
+            <select id="c-subject" name="subject" required>
+              <option value="">Select a subject</option>
+              <option>Order enquiry</option>
+              <option>Account issue</option>
+              <option>Collection slot question</option>
+              <option>Payment issue</option>
+              <option>General enquiry</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="c-message">Message <span class="required">*</span></label>
+            <textarea id="c-message" name="message" placeholder="Tell us how we can help..." required></textarea>
+            <span class="form-error" id="c-error"></span>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" id="c-submit">Send message</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-grid">
+      <div>
+        <h4>Cobble Cart</h4>
+        <p>Supporting local independent traders in Cleckhuddersfax.</p>
+      </div>
+      <div>
+        <h4>Shop</h4>
+        <a href="home.html">Browse all</a>
+        <a href="category.html">By category</a>
+      </div>
+      <div>
+        <h4>Account</h4>
+        <a href="register.html">Register</a>
+        <a href="login.html">Log in</a>
+      </div>
+      <div>
+        <h4>Help</h4>
+        <a href="contact.html">Contact us</a>
+      </div>
+    </div>
+    <div class="footer-bottom">&copy; 2026 Cobble Cart. All rights reserved.</div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+  <script>
+    async function handleContact(e) {
+      e.preventDefault();
+      const err = document.getElementById('c-error');
+      const btn = document.getElementById('c-submit');
+      err.textContent = '';
+
+      const payload = {
+        first_name: document.getElementById('c-first').value.trim(),
+        last_name:  document.getElementById('c-last').value.trim(),
+        email:      document.getElementById('c-email').value.trim(),
+        order_ref:  document.getElementById('c-order').value.trim(),
+        subject:    document.getElementById('c-subject').value,
+        message:    document.getElementById('c-message').value.trim(),
+      };
+
+      btn.disabled = true; btn.textContent = 'Sending…';
+      try {
+        const res = await fetch('../../api/submit-contact.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.success) throw new Error(data.message || ('HTTP ' + res.status));
+        showAlert(data.message, 'success');
+        document.getElementById('contact-form').reset();
+      } catch (ex) {
+        err.textContent = ex.message;
+        showAlert('Could not send: ' + ex.message, 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = 'Send message';
+      }
+    }
+  </script>
+</body>
+</html>

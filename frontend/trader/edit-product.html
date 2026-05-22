@@ -1,0 +1,246 @@
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Product — Cobble Cart</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .current-image { width: 90px; height: 90px; object-fit: cover; border-radius: 10px; border: 1px solid var(--border); }
+    .no-image-box { width: 90px; height: 90px; border-radius: 10px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #888; border: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+            <a href="../index.html" class="navbar-logo">
+      <img src="../images/logo-full.png" class="site-logo" alt="Cobble Cart">
+    </a>
+      <span class="site-name">Cobble<em>Cart</em></span>
+      <span style="font-size:11px;color:#aaa;background:#333;padding:2px 8px;border-radius:3px;margin-left:4px;">Trader Panel</span>
+    </div>
+    <div class="navbar-actions">
+      <span id="trader-shop-name" style="font-size:13px;color:#ccc;">Trader Shop</span>
+      <a href="#" onclick="logout(); return false;" class="btn btn-outline" style="font-size:13px;padding:6px 14px;">Log out</a>
+    </div>
+  </nav>
+
+  <div class="layout-with-sidebar">
+    <div class="sidebar">
+      <div class="sidebar-label">Trader menu</div>
+      <a class="sidebar-link" href="dashboard.html">Dashboard</a>
+      <a class="sidebar-link" href="add-product.html">Add product</a>
+      <a class="sidebar-link active" href="manage-products.html">Manage products</a>
+      <a class="sidebar-link" href="reports.html?type=daily">Daily order report</a>
+      <a class="sidebar-link" href="reports.html?type=weekly">Weekly finance</a>
+      <a class="sidebar-link" href="reports.html?type=monthly">Monthly sales</a>
+      <a class="sidebar-link" href="profile-settings.html">Profile settings</a>
+      <div class="sidebar-footer">
+        <a href="#" onclick="logout(); return false;" style="font-size:13px;color:#888;">Log out</a>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <div class="page-header">
+        <div>
+          <h1>Edit product</h1>
+          <p>Update the details of this product in your shop.</p>
+        </div>
+        <a href="manage-products.html" class="btn btn-grey">Back to products</a>
+      </div>
+
+      <div id="load-msg" style="font-size:14px;color:#888;padding:20px 0;">Loading product…</div>
+
+      <div class="card" id="edit-card" style="max-width:760px;display:none;">
+        <form id="edit-form" onsubmit="handleUpdate(event)" enctype="multipart/form-data">
+          <input type="hidden" name="product_id" id="f-product-id">
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Product name <span class="required">*</span></label>
+              <input type="text" name="name" id="f-name" required>
+            </div>
+            <div class="form-group">
+              <label>Product type <span class="required">*</span></label>
+              <select name="product_type_id" id="f-type" required>
+                <option value="1">Meat</option>
+                <option value="2">Vegetables</option>
+                <option value="3">Fish</option>
+                <option value="4">Bakery</option>
+                <option value="5">Deli</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Product description <span class="required">*</span></label>
+            <textarea name="description" id="f-desc" required></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Item price ($) <span class="required">*</span></label>
+              <input type="number" name="price" id="f-price" step="0.01" min="0.01" required>
+            </div>
+            <div class="form-group">
+              <label>Customer offer (%)</label>
+              <input type="number" name="offer_percent" id="f-offer" step="0.01" min="0" max="99.99">
+              <span style="font-size:12px;color:var(--grey-mid);margin-top:4px;display:block;">Set to 0 to remove the offer.</span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Quantity per item <span class="required">*</span></label>
+              <input type="text" name="quantity_per_item" id="f-qpi" required>
+            </div>
+            <div class="form-group"></div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Stock available <span class="required">*</span></label>
+              <input type="number" name="stock_quantity" id="f-stock" min="0" required>
+            </div>
+            <div class="form-group">
+              <label>Min order quantity <span class="required">*</span></label>
+              <input type="number" name="min_order" id="f-min" min="1" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Max order quantity <span class="required">*</span></label>
+              <input type="number" name="max_order" id="f-max" min="1" required>
+            </div>
+            <div class="form-group">
+              <label>Allergy information</label>
+              <input type="text" name="allergy_info" id="f-allergy">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Product image</label>
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+              <img id="current-image" class="current-image" alt="current product image" style="display:none;">
+              <div id="no-image" class="no-image-box">No image</div>
+              <div style="font-size:12px;color:var(--grey-mid);">Current image. Choose a file below to replace it.</div>
+            </div>
+            <input type="file" name="product_image" accept="image/*" style="padding:8px;">
+            <span style="font-size:12px;color:var(--grey-mid);margin-top:4px;display:block;">Accepted: JPG, PNG, WEBP. Leave empty to keep the current image.</span>
+          </div>
+
+          <div class="divider"></div>
+          <span class="form-error" id="form-error" style="display:block;margin-bottom:10px;"></span>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button type="submit" class="btn btn-primary" id="save-btn">Save changes</button>
+            <a href="manage-products.html" class="btn btn-grey">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/main.js"></script>
+  <script>
+    const params  = new URLSearchParams(window.location.search);
+    const productId = parseInt(params.get('product_id'), 10);
+    const adminShopId = parseInt(params.get('shop_id'), 10);
+
+    // Keep ?shop_id=N on links while admin is acting-as
+    (function preserveShopIdLinks() {
+      if (!Number.isInteger(adminShopId) || adminShopId <= 0) return;
+      document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('a[href]').forEach(a => {
+          const href = a.getAttribute('href');
+          if (!href || href === '#' || /^https?:|^javascript:|^mailto:/i.test(href)) return;
+          if (href.startsWith('../admin/') || href.includes('shop_id=')) return;
+          a.setAttribute('href', href + (href.includes('?') ? '&' : '?') + 'shop_id=' + adminShopId);
+        });
+      });
+    })();
+
+    function applyTraderProfile() {
+      const user = getCurrentUser();
+      if (!user) return;
+      const shop = user.shop || {};
+      document.getElementById('trader-shop-name').textContent = shop.shop_name || user.name || 'Trader Shop';
+    }
+
+    async function loadProduct() {
+      if (!Number.isInteger(productId) || productId <= 0) {
+        document.getElementById('load-msg').textContent = 'No product specified.';
+        return;
+      }
+      try {
+        const res = await fetch('../../api/get-products.php?product_id=' + productId, { credentials: 'include' });
+        const data = await res.json();
+        if (!data.success || !(data.products || []).length) {
+          throw new Error(data.message || 'Product not found');
+        }
+        const p = data.products[0];
+        document.getElementById('f-product-id').value = p.PRODUCT_ID;
+        document.getElementById('f-name').value       = p.NAME || '';
+        document.getElementById('f-type').value       = String(p.PRODUCT_TYPE_ID || '1');
+        document.getElementById('f-desc').value       = p.DESCRIPTION || '';
+        document.getElementById('f-price').value      = p.PRICE || '';
+        document.getElementById('f-offer').value      = p.OFFER_PERCENT || '0';
+        document.getElementById('f-qpi').value         = p.QUANTITY_PER_ITEM || '';
+        document.getElementById('f-stock').value      = p.STOCK_QUANTITY || '0';
+        document.getElementById('f-min').value         = p.MIN_ORDER || '1';
+        document.getElementById('f-max').value         = p.MAX_ORDER || '1';
+        document.getElementById('f-allergy').value     = p.ALLERGY_INFO || '';
+
+        if (p.PRODUCT_IMAGE) {
+          const img = document.getElementById('current-image');
+          img.src = '../' + p.PRODUCT_IMAGE;
+          img.style.display = 'block';
+          img.onerror = () => { img.style.display = 'none'; document.getElementById('no-image').style.display = 'flex'; };
+          document.getElementById('no-image').style.display = 'none';
+        }
+
+        document.getElementById('load-msg').style.display = 'none';
+        document.getElementById('edit-card').style.display = 'block';
+      } catch (err) {
+        document.getElementById('load-msg').textContent = 'Could not load product: ' + err.message;
+      }
+    }
+
+    async function handleUpdate(e) {
+      e.preventDefault();
+      const errEl = document.getElementById('form-error');
+      const btn   = document.getElementById('save-btn');
+      errEl.textContent = '';
+
+      const fd = new FormData(e.target);
+      if (Number.isInteger(adminShopId) && adminShopId > 0) fd.append('shop_id', String(adminShopId));
+
+      btn.disabled = true; btn.textContent = 'Saving…';
+      try {
+        const res = await fetch('../../api/update-product.php', {
+          method: 'POST',
+          credentials: 'include',
+          body: fd
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.success) throw new Error(data.message || ('HTTP ' + res.status));
+        showAlert('Product updated successfully', 'success');
+        setTimeout(() => {
+          window.location.href = 'manage-products.html' +
+            (Number.isInteger(adminShopId) && adminShopId > 0 ? '?shop_id=' + adminShopId : '');
+        }, 900);
+      } catch (err) {
+        errEl.textContent = err.message;
+        showAlert('Update failed: ' + err.message, 'error');
+        btn.disabled = false; btn.textContent = 'Save changes';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      applyTraderProfile();
+      loadProduct();
+    });
+  </script>
+</body>
+</html>

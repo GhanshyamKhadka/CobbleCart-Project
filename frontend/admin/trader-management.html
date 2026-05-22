@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trader management — Cobble Cart Admin</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .trader-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 22px;
+      margin-bottom: 14px;
+      display: grid;
+      grid-template-columns: 1fr 220px;
+      gap: 20px;
+      align-items: center;
+    }
+    .trader-card .meta { display: flex; align-items: center; gap: 16px; }
+    .shop-badge {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #b07a35, #f0a020);
+      color: var(--white);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; font-weight: 700;
+      flex-shrink: 0;
+    }
+    .trader-card h3 { font-size: 15px; font-weight: 700; margin: 0; color: var(--dark); }
+    .trader-card .email { font-size: 12px; color: var(--grey-mid); margin-top: 2px; }
+    .trader-card .kpis {
+      display: flex; gap: 18px; margin-top: 6px;
+      font-size: 12px; color: var(--grey-mid);
+    }
+    .trader-card .kpis strong { color: var(--dark); font-weight: 600; font-size: 12.5px; }
+    .actions { display: flex; flex-direction: column; gap: 6px; }
+    .actions a {
+      display: block; text-align: center;
+      font-size: 12.5px; padding: 8px 14px; border-radius: 6px;
+      border: 1px solid var(--border); background: var(--white); color: var(--dark);
+      text-decoration: none; transition: all 0.15s;
+    }
+    .actions a:hover { border-color: var(--orange); background: #fff8ee; }
+    .actions a.primary { background: var(--orange); border-color: var(--orange); color: var(--white); font-weight: 600; }
+    .actions a.primary:hover { background: var(--orange-dark); }
+    .empty { text-align: center; color: #888; padding: 40px; font-size: 13.5px; }
+    .err   { text-align: center; color: #c62828; padding: 40px; font-size: 13.5px; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+            <a href="../index.html" class="navbar-logo">
+      <img src="../images/logo-full.png" class="site-logo" alt="Cobble Cart">
+    </a>
+      <span class="site-name">Cobble<em>Cart</em></span>
+      <span style="font-size:11px;color:#aaa;background:#333;padding:2px 8px;border-radius:3px;margin-left:4px;">Admin Panel</span>
+    </div>
+    <div class="navbar-actions">
+      <span style="font-size:13px;color:#ccc;">Admin</span>
+      <a href="#" onclick="logout(); return false;" class="btn btn-outline" style="font-size:13px;padding:6px 14px;">Log out</a>
+    </div>
+  </nav>
+
+  <div class="layout-with-sidebar">
+    <div class="sidebar">
+      <div class="sidebar-label">Admin menu</div>
+      <a class="sidebar-link" href="dashboard.html">Dashboard</a>
+      <a class="sidebar-link active" href="trader-management.html">Trader management</a>
+      <a class="sidebar-link" href="add-trader.html">Add trader</a>
+      <a class="sidebar-link" href="customer-management.html">Customer management</a>
+      <a class="sidebar-link" href="slots.html">Collection slots</a>
+      <a class="sidebar-link" href="orders.html">All orders</a>
+      <a class="sidebar-link" href="messages.html">Messages</a>
+      <a class="sidebar-link" href="reset-passwords.html">Reset passwords</a>
+    </div>
+
+    <div class="main-content">
+      <div class="page-header">
+        <div>
+          <h1>Trader management</h1>
+          <p>Browse every registered trader and open their shop dashboard / reports as admin.</p>
+          <p style="font-size:13px;color:#666;margin-top:6px;">Use <strong>Enter trader account</strong> to open the trader dashboard directly with <strong>no trader password</strong> required. This works for admin impersonation via shop ID.</p>
+        </div>
+        <span id="total-pill" style="font-size:13px;color:var(--grey-mid);background:var(--grey-light);border:1px solid var(--border);padding:6px 14px;border-radius:6px;">Loading…</span>
+      </div>
+
+      <div id="traders-list">
+        <div class="empty">Loading traders…</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/main.js"></script>
+  <script>
+    function escapeHtml(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+    function initials(name) {
+      return String(name || '').split(/\s+/).map(s => s[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || '??';
+    }
+    function fmtMoney(n) { return '$' + (Number(n) || 0).toFixed(2); }
+
+    async function loadTraders() {
+      const list = document.getElementById('traders-list');
+      try {
+        const res = await fetch('../../api/get-traders.php', { credentials: 'include' });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.success) throw new Error(data.message || ('HTTP ' + res.status));
+        const traders = data.traders || [];
+        document.getElementById('total-pill').textContent =
+          'Total: ' + traders.length + ' trader' + (traders.length === 1 ? '' : 's');
+
+        if (!traders.length) {
+          list.innerHTML = '<div class="empty">No traders registered yet.</div>';
+          return;
+        }
+
+        list.innerHTML = traders.map(t => {
+          const shopId = t.SHOP_ID ? Number(t.SHOP_ID) : null;
+          const pendingPill = Number(t.PENDING_COUNT) > 0
+            ? `<span class="badge badge-warning" style="margin-left:6px;">${t.PENDING_COUNT} pending</span>`
+            : '';
+          return `
+            <div class="trader-card">
+              <div class="meta">
+                <div class="shop-badge">${initials(t.SHOP_NAME || t.NAME)}</div>
+                <div>
+                  <h3>${escapeHtml(t.SHOP_NAME || '(no shop)')} ${pendingPill}</h3>
+                  <div class="email">${escapeHtml(t.NAME)} &middot; ${escapeHtml(t.EMAIL)}</div>
+                  <div class="kpis">
+                    <span><strong>${t.PRODUCT_COUNT || 0}</strong> products</span>
+                    <span><strong>${t.ORDER_COUNT || 0}</strong> orders</span>
+                    <span><strong>${fmtMoney(t.GROSS_REVENUE)}</strong> revenue</span>
+                  </div>
+                </div>
+              </div>
+              <div class="actions">
+                ${ shopId
+                  ? `<a class="primary" href="../trader/dashboard.html?shop_id=${shopId}">Enter trader account</a>
+                     <a href="../trader/reports.html?type=daily&shop_id=${shopId}">Reports</a>
+                     <a href="../trader/manage-products.html?shop_id=${shopId}">Manage products</a>`
+                  : `<a class="primary" href="add-trader.html?user_id=${t.USER_ID}">Assign a shop</a>` }
+              </div>
+            </div>`;
+        }).join('');
+      } catch (err) {
+        list.innerHTML = '<div class="err">' + escapeHtml(err.message) + '</div>';
+        document.getElementById('total-pill').textContent = '—';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadTraders);
+  </script>
+</body>
+</html>

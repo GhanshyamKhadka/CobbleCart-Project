@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Trader — Cobble Cart</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <nav class="navbar">
+            <a href="../index.html" class="navbar-logo">
+      <img src="../images/logo-full.png" class="site-logo" alt="Cobble Cart">
+    </a>
+      <span class="site-name">Cobble<em>Cart</em></span>
+      <span style="font-size:11px;color:#aaa;background:#333;padding:2px 8px;border-radius:3px;margin-left:4px;">Admin Panel</span>
+    </div>
+    <div class="navbar-actions">
+      <span style="font-size:13px;color:#ccc;">Admin</span>
+      <a href="../customer/login.html" class="btn btn-outline" style="font-size:13px;padding:6px 14px;">Log out</a>
+    </div>
+  </nav>
+
+  <div class="layout-with-sidebar">
+
+    <div class="sidebar">
+      <div class="sidebar-label">Admin menu</div>
+      <a class="sidebar-link" href="dashboard.html">Dashboard</a>
+      <a class="sidebar-link" href="trader-management.html">Trader management</a>
+      <a class="sidebar-link active" href="add-trader.html">Add trader</a>
+      <a class="sidebar-link" href="customer-management.html">Customer management</a>
+      <a class="sidebar-link" href="slots.html">Collection slots</a>
+      <a class="sidebar-link" href="orders.html">All orders</a>
+      <a class="sidebar-link" href="messages.html">Messages</a>
+      <a class="sidebar-link" href="reset-passwords.html">Reset passwords</a>
+      <div class="sidebar-footer">
+        <a href="../customer/login.html" style="font-size:13px;color:#888;">Log out</a>
+      </div>
+    </div>
+
+    <div class="main-content">
+
+      <div class="page-header">
+        <div>
+          <h1>Add trader</h1>
+          <p>Create a new trader account for the Cobble Cart platform</p>
+        </div>
+        <a href="dashboard.html" class="btn btn-grey">Back to dashboard</a>
+      </div>
+
+      <div class="card" style="max-width:760px;">
+        <form onsubmit="handleAddTrader(event)">
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Trader full name <span class="required">*</span></label>
+              <input type="text" placeholder="e.g. John Smith" required>
+              <span class="form-error"></span>
+            </div>
+            <div class="form-group">
+              <label>Shop name <span class="required">*</span></label>
+              <input type="text" placeholder="e.g. Smith's Butchers" required>
+              <span class="form-error"></span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="t-shop-type">Shop type <span class="required">*</span></label>
+              <select id="t-shop-type" aria-label="Shop type" required>
+                <option value="">Select shop type</option>
+                <option>Butcher</option>
+                <option>Greengrocer</option>
+                <option>Fishmonger</option>
+                <option>Bakery</option>
+                <option>Delicatessen</option>
+              </select>
+              <span style="font-size:11px;color:var(--grey-mid);margin-top:4px;display:block;">Maximum 10 shops on the platform</span>
+            </div>
+            <div class="form-group">
+              <label>Email address <span class="required">*</span></label>
+              <input type="email" placeholder="e.g. john@smithsbutchers.co.uk" required>
+              <span class="form-error"></span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Phone number <span class="required">*</span></label>
+              <input type="tel" placeholder="e.g. 07700 900123" required>
+            </div>
+            <div class="form-group">
+              <label>Temporary password <span class="required">*</span></label>
+              <input type="password" placeholder="Set initial login password" required>
+              <span style="font-size:11px;color:var(--grey-mid);margin-top:4px;display:block;">Trader will be prompted to change on first login</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Shop description</label>
+            <textarea placeholder="Brief description of the shop and products offered"></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="t-status">Account status</label>
+              <select id="t-status" aria-label="Account status">
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="t-max-products">Max products allowed</label>
+              <input type="number" id="t-max-products" value="20" min="1" max="50">
+              <span style="font-size:11px;color:var(--grey-mid);margin-top:4px;display:block;">Default is 20 products per trader</span>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div style="display:flex;gap:10px;">
+            <button type="submit" class="btn btn-primary">Add trader</button>
+            <button type="reset" class="btn btn-grey">Clear form</button>
+            <a href="dashboard.html" class="btn btn-grey">Cancel</a>
+          </div>
+
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="../js/main.js"></script>
+  <script>
+    function handleAddTrader(e) {
+      e.preventDefault();
+      // Will POST to add-trader.php in backend
+      showAlert('Trader account created successfully!', 'success');
+      setTimeout(() => window.location.href = 'dashboard.html', 1500);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Account — Cobble Cart</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="icon" href="../images/logo-page.png" type="image/png">
+  <link rel="apple-touch-icon" href="../images/logo-page.png">
+  <style>
+    .profile-layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+    .profile-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .profile-avatar {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      text-align: center;
+    }
+    .avatar-frame {
+      position: relative;
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 14px;
+    }
+    .avatar-photo {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      object-fit: cover;
+      display: none;
+    }
+    .avatar-circle {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: var(--orange-light);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; font-weight: 700;
+      color: var(--dark);
+      margin: 0 auto 14px;
+    }
+    .profile-avatar h3 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+    .profile-avatar p { font-size: 13px; color: var(--grey-mid); }
+    .profile-nav { background: var(--white); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .profile-nav-item {
+      display: block;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--grey-dark);
+      border-left: 3px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-bottom: 1px solid var(--border);
+    }
+    .profile-nav-item:last-child { border-bottom: none; }
+    .profile-nav-item:hover { background: var(--grey-light); border-left-color: var(--orange-light); }
+    .profile-nav-item.active { background: #FFF3DC; border-left-color: var(--orange); color: var(--dark); font-weight: 500; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .order-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+    }
+    .order-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .order-card-header .order-id { font-size: 14px; font-weight: 600; }
+    .order-card-header .order-date { font-size: 12px; color: var(--grey-mid); }
+    .order-items-list { font-size: 13px; color: var(--grey-dark); margin-bottom: 10px; }
+    .order-footer { display: flex; justify-content: space-between; align-items: center; }
+    .order-footer .total { font-size: 14px; font-weight: 600; }
+    .order-footer .slot-info { font-size: 12px; color: var(--grey-mid); }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+          <a href="../index.html" class="navbar-logo">
+      <img src="../images/logo-full.png" class="site-logo" alt="Cobble Cart">
+    </a>
+    <ul class="navbar-links">
+      <li><a href="home.html">Browse</a></li>
+      <li><a href="category.html">Categories</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <a href="cart.html" class="btn btn-primary">
+        Basket <span id="cart-count" style="background:var(--dark);color:#fff;border-radius:50%;padding:2px 6px;font-size:11px;margin-left:4px;">0</span>
+      </a>
+    </div>
+  </nav>
+
+  <div class="profile-layout">
+
+    <!-- Sidebar -->
+    <div class="profile-sidebar">
+      <div class="profile-avatar">
+        <div class="avatar-frame">
+          <img id="avatar-photo" class="avatar-photo" alt="Profile photo">
+          <div class="avatar-circle" id="avatar-initials">--</div>
+        </div>
+        <h3 id="avatar-name">—</h3>
+        <p id="avatar-email">—</p>
+      </div>
+      <div class="profile-nav">
+        <a class="profile-nav-item active" onclick="showTab('orders', this)">My orders</a>
+        <a class="profile-nav-item" onclick="showTab('details', this)">Account details</a>
+        <a class="profile-nav-item" onclick="showTab('password', this)">Change password</a>
+        <a class="profile-nav-item" href="#" onclick="logout(); return false;" style="color:#c62828;">Log out</a>
+      </div>
+    </div>
+
+    <!-- Main panel -->
+    <div>
+
+      <!-- Orders tab -->
+      <div class="tab-content active" id="tab-orders">
+        <div class="card" style="margin-bottom:0;">
+          <div class="card-title">My orders</div>
+          <div id="orders-list">
+            <p style="font-size:13px;color:#888;">Loading your orders…</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Details tab -->
+      <div class="tab-content" id="tab-details">
+        <div class="card">
+          <div class="card-title">Account details</div>
+          <form id="details-form" onsubmit="saveDetails(event)">
+            <div class="form-row">
+              <div class="form-group">
+                <label>First name</label>
+                <input type="text" id="first-name" required>
+              </div>
+              <div class="form-group">
+                <label>Last name</label>
+                <input type="text" id="last-name">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Email address</label>
+              <input type="email" id="email-input" required>
+              <span class="form-error" id="details-error"></span>
+            </div>
+            <div class="form-group">
+              <label>Profile photo</label>
+              <input type="file" id="profile-photo" accept="image/png,image/jpeg,image/webp">
+              <span class="form-error" id="photo-error"></span>
+            </div>
+            <button type="submit" class="btn btn-primary" id="details-save">Save changes</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Password tab -->
+      <div class="tab-content" id="tab-password">
+        <div class="card">
+          <div class="card-title">Change password</div>
+          <form id="password-form" onsubmit="changePassword(event)">
+            <div class="form-group">
+              <label>Current password</label>
+              <input type="password" id="current-password" placeholder="Enter current password" required>
+            </div>
+            <div class="form-group">
+              <label>New password</label>
+              <input type="password" id="password" placeholder="Minimum 8 characters" minlength="8" required>
+            </div>
+            <div class="form-group">
+              <label>Confirm new password</label>
+              <input type="password" id="confirm-password" placeholder="Re-enter new password" required>
+              <span class="form-error" id="pass-error"></span>
+            </div>
+            <button type="submit" class="btn btn-primary" id="password-save">Update password</button>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-bottom">&copy; 2026 Cobble Cart. All rights reserved.</div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+  <script>
+    function showTab(tabName, el) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.profile-nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('tab-' + tabName).classList.add('active');
+      el.classList.add('active');
+    }
+
+    // --- load current user into the page ----------------------------------
+    function loadUserIntoPage() {
+      const user = getCurrentUser();   // helper from main.js
+      if (!user) {
+        window.location.href = 'login.html';
+        return;
+      }
+      const fullName = (user.name || '').trim();
+      const [firstName, ...rest] = fullName ? fullName.split(/\s+/) : [''];
+      const lastName = rest.join(' ');
+      const initials = (firstName[0] || '').toUpperCase() + (rest[0]?.[0] || '').toUpperCase();
+
+      const avatarPhoto = document.getElementById('avatar-photo');
+      if (user.profile_image) {
+        let imageUrl = user.profile_image;
+        if (!imageUrl.startsWith('http') && !imageUrl.startsWith('/')) {
+          imageUrl = '../' + imageUrl.replace(/^\/+/, '');
+        }
+        avatarPhoto.src = imageUrl;
+        avatarPhoto.style.display = 'block';
+        document.getElementById('avatar-initials').style.display = 'none';
+      } else {
+        avatarPhoto.style.display = 'none';
+        document.getElementById('avatar-initials').style.display = 'flex';
+      }
+      document.getElementById('avatar-initials').textContent = initials || '?';
+      document.getElementById('avatar-name').textContent = fullName || user.email || 'My account';
+      document.getElementById('avatar-email').textContent = user.email || '';
+
+      document.getElementById('first-name').value = firstName || '';
+      document.getElementById('last-name').value = lastName || '';
+      document.getElementById('email-input').value = user.email || '';
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      loadUserIntoPage();
+      loadOrders();
+    });
+
+    // --- order history ------------------------------------------------------
+    function fmtPrice(n) { return '$' + (Number(n) || 0).toFixed(2); }
+
+    function fmtOrderDate(iso) {
+      if (!iso) return '';
+      const d = new Date(iso.replace(' ', 'T'));
+      if (isNaN(d.getTime())) return iso;
+      return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
+    function fmtCollection(date, time) {
+      if (!date) return 'Collection slot pending';
+      const d = new Date(date + 'T00:00:00');
+      const head = isNaN(d.getTime())
+        ? date
+        : d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+      return 'Collection: ' + head + (time ? ', ' + time : '');
+    }
+
+    function statusBadge(status) {
+      const s = String(status || '').toUpperCase();
+      if (s === 'PAID')             return '<span class="badge badge-success">Paid</span>';
+      if (s === 'COLLECTED')        return '<span class="badge badge-grey">Collected</span>';
+      if (s === 'CANCELLED')        return '<span class="badge badge-danger">Cancelled</span>';
+      if (s === 'PENDING_PAYMENT')  return '<span class="badge badge-warning">Awaiting payment</span>';
+      if (s === 'PLACED')           return '<span class="badge badge-success">Confirmed</span>';
+      return '<span class="badge">' + s + '</span>';
+    }
+
+    async function loadOrders() {
+      const wrap = document.getElementById('orders-list');
+      try {
+        const res = await fetch('../../api/get-orders.php', { credentials: 'include' });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.success) throw new Error(data.message || ('HTTP ' + res.status));
+
+        const orders = data.orders || [];
+        if (!orders.length) {
+          wrap.innerHTML = '<p style="font-size:13px;color:#888;">You haven\'t placed any orders yet. <a href="home.html">Start shopping</a>.</p>';
+          return;
+        }
+
+        wrap.innerHTML = orders.map(o => `
+          <div class="order-card">
+            <div class="order-card-header">
+              <span class="order-id">#CC-${o.ORDER_ID}</span>
+              <div style="display:flex;gap:10px;align-items:center;">
+                <span class="order-date">${fmtOrderDate(o.ORDER_DATE)}</span>
+                ${statusBadge(o.STATUS)}
+              </div>
+            </div>
+            <div class="order-items-list">${o.ITEMS_SUMMARY || '—'}</div>
+            <div class="order-footer">
+              <span class="total">${fmtPrice(o.TOTAL_AMOUNT)}</span>
+              <span class="slot-info">${fmtCollection(o.COLLECTION_DATE, o.TIME_SLOT)}</span>
+              <a href="invoice.html?order_id=${o.ORDER_ID}" class="btn btn-grey" style="padding:5px 14px;font-size:12px;">View invoice</a>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        wrap.innerHTML = '<p style="font-size:13px;color:#c62828;">Could not load orders: ' + err.message + '</p>';
+      }
+    }
+
+    // --- account details CRUD ---------------------------------------------
+    async function saveDetails(e) {
+      e.preventDefault();
+      const user = getCurrentUser();
+      if (!user) { window.location.href = 'login.html'; return; }
+      const errorEl = document.getElementById('details-error');
+      const button = document.getElementById('details-save');
+      errorEl.textContent = '';
+
+      const firstName = document.getElementById('first-name').value.trim();
+      const lastName = document.getElementById('last-name').value.trim();
+      const email = document.getElementById('email-input').value.trim();
+      if (!firstName || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        errorEl.textContent = 'First name and a valid email are required.';
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('user_id', user.user_id);
+      formData.append('name', (firstName + ' ' + lastName).trim());
+      formData.append('email', email);
+      const photoInput = document.getElementById('profile-photo');
+      if (photoInput && photoInput.files.length) {
+        formData.append('profile_photo', photoInput.files[0]);
+      }
+
+      button.disabled = true; button.textContent = 'Saving...';
+      try {
+        const res = await fetch('../../api/update-profile.php', {
+          method: 'POST',
+          credentials: 'include',
+          body: formData
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || ('HTTP ' + res.status));
+        }
+        // refresh localStorage so other pages see the new name/email and profile photo
+        user.name = (firstName + ' ' + lastName).trim();
+        user.email = email;
+        if (data.profile_image) {
+          user.profile_image = data.profile_image;
+        }
+        localStorage.setItem('cc_user', JSON.stringify(user));
+        loadUserIntoPage();
+        if (photoInput) {
+          photoInput.value = '';
+        }
+        showAlert(data.message || 'Account details updated', 'success');
+      } catch (err) {
+        errorEl.textContent = err.message;
+        showAlert('Update failed: ' + err.message, 'error');
+      } finally {
+        button.disabled = false; button.textContent = 'Save changes';
+      }
+    }
+
+    // --- password change CRUD ---------------------------------------------
+    async function changePassword(e) {
+      e.preventDefault();
+      const user = getCurrentUser();
+      if (!user) { window.location.href = 'login.html'; return; }
+      const errorEl = document.getElementById('pass-error');
+      const button = document.getElementById('password-save');
+      errorEl.textContent = '';
+
+      const current = document.getElementById('current-password').value;
+      const next = document.getElementById('password').value;
+      const confirm = document.getElementById('confirm-password').value;
+      if (next.length < 8) {
+        errorEl.textContent = 'New password must be at least 8 characters.';
+        return;
+      }
+      if (next !== confirm) {
+        errorEl.textContent = 'New passwords do not match.';
+        return;
+      }
+
+      button.disabled = true; button.textContent = 'Updating...';
+      try {
+        const res = await fetch('../../api/change-password.php', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: user.user_id,
+            current_password: current,
+            new_password: next
+          })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || ('HTTP ' + res.status));
+        }
+        document.getElementById('password-form').reset();
+        showAlert(data.message || 'Password updated', 'success');
+      } catch (err) {
+        errorEl.textContent = err.message;
+        showAlert('Password change failed: ' + err.message, 'error');
+      } finally {
+        button.disabled = false; button.textContent = 'Update password';
+      }
+    }
+  </script>
+</body>
+</html>

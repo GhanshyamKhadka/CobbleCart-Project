@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Favorites — Cobble Cart</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="icon" href="../images/logo-page.png" type="image/png">
+  <link rel="apple-touch-icon" href="../images/logo-page.png">
+  <style>
+    .page-header { max-width: 1100px; margin: 0 auto; padding: 32px 24px 16px; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+    .section-title-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 24px; }
+    .section-title-bar h3 { margin: 0; font-size: 24px; }
+    .wishlist-empty { text-align: center; padding: 64px 24px; color: var(--grey-mid); }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="../index.html" class="navbar-logo">
+      <img src="../images/logo-full.png" class="site-logo" alt="Cobble Cart">
+    </a>
+    <ul class="navbar-links">
+      <li><a href="home.html">Browse</a></li>
+      <li><a href="category.html">Categories</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <a href="profile.html" style="color:#ccc;font-size:14px;">My account</a>
+      <a href="cart.html" class="btn btn-primary">
+        Basket <span id="cart-count" style="background:var(--dark);color:#fff;border-radius:50%;padding:2px 6px;font-size:11px;margin-left:4px;">0</span>
+      </a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="section-title-bar">
+      <h3>My Favorites</h3>
+      <a href="home.html" class="btn btn-outline">Continue browsing</a>
+    </div>
+    <div id="wishlist-items"></div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-bottom">&copy; 2026 Cobble Cart. All rights reserved.</div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+  <script>
+    async function loadWishlistPage() {
+      const items = await getWishlistItems();
+      renderWishlist(items);
+    }
+    loadWishlistPage();
+  </script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>All orders — Cobble Cart Admin</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <nav class="navbar">
+            <a href="../index.html" class="navbar-logo">
+      <img src="../images/logo-full.png" class="site-logo" alt="Cobble Cart">
+    </a>
+      <span class="site-name">Cobble<em>Cart</em></span>
+      <span style="font-size:11px;color:#aaa;background:#333;padding:2px 8px;border-radius:3px;margin-left:4px;">Admin Panel</span>
+    </div>
+    <div class="navbar-actions">
+      <span style="font-size:13px;color:#ccc;">Admin</span>
+      <a href="#" onclick="logout(); return false;" class="btn btn-outline" style="font-size:13px;padding:6px 14px;">Log out</a>
+    </div>
+  </nav>
+
+  <div class="layout-with-sidebar">
+    <div class="sidebar">
+      <div class="sidebar-label">Admin menu</div>
+      <a class="sidebar-link" href="dashboard.html">Dashboard</a>
+      <a class="sidebar-link" href="trader-management.html">Trader management</a>
+      <a class="sidebar-link" href="add-trader.html">Add trader</a>
+      <a class="sidebar-link" href="customer-management.html">Customer management</a>
+      <a class="sidebar-link" href="slots.html">Collection slots</a>
+      <a class="sidebar-link active" href="orders.html">All orders</a>
+      <a class="sidebar-link" href="messages.html">Messages</a>
+      <a class="sidebar-link" href="reset-passwords.html">Reset passwords</a>
+    </div>
+
+    <div class="main-content">
+      <div class="page-header">
+        <div>
+          <h1>All orders</h1>
+          <p>Every order placed on Cobble Cart — sortable and filterable.</p>
+        </div>
+        <span id="total-pill" style="font-size:13px;color:var(--grey-mid);background:var(--grey-light);border:1px solid var(--border);padding:6px 14px;border-radius:6px;">Loading…</span>
+      </div>
+
+      <div class="search-bar" style="margin-bottom:20px;">
+        <input type="text" id="search-input" placeholder="Search by order ID, customer, or product..." oninput="filterOrders()">
+        <select id="status-filter" onchange="filterOrders()" aria-label="Filter by status">
+          <option value="">All statuses</option>
+          <option value="PAID">Paid</option>
+          <option value="PENDING_PAYMENT">Awaiting payment</option>
+          <option value="CANCELLED">Cancelled</option>
+          <option value="COLLECTED">Collected</option>
+        </select>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Date</th>
+              <th>Items</th>
+              <th>Collection</th>
+              <th>Total</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="orders-body">
+            <tr><td colspan="6" style="text-align:center;color:#888;padding:30px;">Loading orders…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/main.js"></script>
+  <script>
+    let allOrders = [];
+    function escapeHtml(s){return String(s ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+    function fmtPrice(n){ return '$' + (Number(n)||0).toFixed(2); }
+    function fmtDate(iso){
+      if (!iso) return '—';
+      const d = new Date(iso.replace(' ', 'T'));
+      if (isNaN(d.getTime())) return iso;
+      return d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+    }
+    function badge(s){
+      const v = String(s||'').toUpperCase();
+      if (v==='PAID')             return '<span class="badge badge-success">Paid</span>';
+      if (v==='COLLECTED')        return '<span class="badge badge-grey">Collected</span>';
+      if (v==='CANCELLED')        return '<span class="badge badge-danger">Cancelled</span>';
+      if (v==='PENDING_PAYMENT')  return '<span class="badge badge-warning">Awaiting payment</span>';
+      if (v==='PLACED')           return '<span class="badge badge-success">Confirmed</span>';
+      return '<span class="badge">' + v + '</span>';
+    }
+
+    async function loadOrders(){
+      try {
+        const res = await fetch('../../api/get-orders.php', { credentials:'include' });
+        const data = await res.json().catch(()=>({}));
+        if (!res.ok || !data.success) throw new Error(data.message || ('HTTP '+res.status));
+        allOrders = data.orders || [];
+        document.getElementById('total-pill').textContent = 'Total: ' + allOrders.length + ' order' + (allOrders.length===1?'':'s');
+        renderOrders(allOrders);
+      } catch (err){
+        document.getElementById('orders-body').innerHTML = '<tr><td colspan="6" style="text-align:center;color:#c62828;padding:30px;">'+escapeHtml(err.message)+'</td></tr>';
+        document.getElementById('total-pill').textContent = '—';
+      }
+    }
+
+    function renderOrders(rows){
+      const body = document.getElementById('orders-body');
+      if (!rows.length){
+        body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#888;padding:30px;">No orders match.</td></tr>';
+        return;
+      }
+      body.innerHTML = rows.map(o => `
+        <tr>
+          <td>#CC-${o.ORDER_ID}</td>
+          <td>${fmtDate(o.ORDER_DATE)}</td>
+          <td>${escapeHtml(o.ITEMS_SUMMARY || '—')}</td>
+          <td>${escapeHtml(o.COLLECTION_DATE || '—')} ${escapeHtml(o.TIME_SLOT ? '· ' + o.TIME_SLOT : '')}</td>
+          <td>${fmtPrice(o.TOTAL_AMOUNT)}</td>
+          <td>${badge(o.STATUS)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function filterOrders(){
+      const q = (document.getElementById('search-input').value || '').toLowerCase();
+      const status = document.getElementById('status-filter').value;
+      renderOrders(allOrders.filter(o =>
+        (!status || (o.STATUS||'').toUpperCase() === status) &&
+        ((String(o.ORDER_ID)+' '+(o.ITEMS_SUMMARY||'')).toLowerCase().includes(q))
+      ));
+    }
+
+    document.addEventListener('DOMContentLoaded', loadOrders);
+  </script>
+</body>
+</html>

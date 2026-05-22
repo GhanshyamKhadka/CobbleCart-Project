@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reports — Cobble Cart Trader</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .layout { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 60px); }
+    .sidebar { background: #2b2b2b; color: #ddd; padding: 24px 0; }
+    .sidebar-link { display: block; padding: 10px 22px; color: #ccc; font-size: 13px; border-left: 3px solid transparent; text-decoration: none; }
+    .sidebar-link:hover { background: #1f1f1f; }
+    .sidebar-link.active { background: #1f1f1f; color: var(--orange); border-left-color: var(--orange); font-weight: 600; }
+    .panel { padding: 32px 36px; max-width: 1100px; }
+    .panel h2 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+    .panel .sub { font-size: 13px; color: var(--grey-mid); margin-bottom: 22px; }
+    .tabs { display: flex; gap: 4px; margin-bottom: 22px; border-bottom: 1px solid var(--border); }
+    .tab {
+      padding: 10px 20px; font-size: 13.5px; font-weight: 500; color: var(--grey-mid);
+      cursor: pointer; border-bottom: 2.5px solid transparent; transition: all 0.15s;
+    }
+    .tab:hover { color: var(--dark); }
+    .tab.active { color: var(--orange-dark); border-bottom-color: var(--orange); font-weight: 600; }
+    .toolbar { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+    .toolbar select { padding: 7px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: var(--font); }
+    .report-card { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 20px; }
+    .report-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 14px; color: var(--dark); }
+    .summary-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 20px; }
+    .summary-tile { background: #fff8ee; border: 1px solid #f0d99a; border-radius: 8px; padding: 14px 16px; }
+    .summary-tile .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: #8a6512; margin-bottom: 6px; }
+    .summary-tile .value { font-size: 22px; font-weight: 700; color: var(--dark); }
+    .empty { text-align: center; color: #888; padding: 30px; font-size: 13.5px; }
+    .err { text-align: center; color: #c62828; padding: 30px; font-size: 13.5px; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+            <a href="../index.html" class="navbar-logo">
+      <img src="../images/logo-full.png" class="site-logo" alt="Cobble Cart">
+    </a>
+      <a href="../index.html" class="site-name">Cobble<em>Cart</em></a>
+      <span style="margin-left:10px;font-size:12px;background:#444;padding:3px 8px;border-radius:4px;color:#ccc;">Trader Panel</span>
+    </div>
+    <div class="navbar-actions">
+      <span id="trader-name" style="font-size:13px;color:#ccc;">—</span>
+      <a href="#" onclick="logout(); return false;" class="btn btn-outline" style="font-size:13px;padding:6px 14px;">Log out</a>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <a class="sidebar-link" href="dashboard.html">Dashboard</a>
+      <a class="sidebar-link" href="add-product.html">Add product</a>
+      <a class="sidebar-link" href="manage-products.html">Manage products</a>
+      <a class="sidebar-link active" href="reports.html?type=daily">Daily order report</a>
+      <a class="sidebar-link" href="reports.html?type=weekly">Weekly finance</a>
+      <a class="sidebar-link" href="reports.html?type=monthly">Monthly sales</a>
+      <a class="sidebar-link" href="profile-settings.html">Profile settings</a>
+    </aside>
+
+    <main class="panel">
+      <h2 id="report-title">Daily order report</h2>
+      <p class="sub" id="report-sub">Orders placed today against your shop, plus a snapshot of current stock.</p>
+
+      <div class="tabs">
+        <div class="tab" data-type="daily">Daily orders</div>
+        <div class="tab" data-type="weekly">Weekly finance</div>
+        <div class="tab" data-type="monthly">Monthly sales</div>
+      </div>
+
+      <div id="toolbar" class="toolbar" style="display:none;">
+        <label for="sort-select" style="font-size:13px;color:var(--grey-mid);">Sort by</label>
+        <select id="sort-select">
+          <option value="name">Product name (A–Z)</option>
+          <option value="orders">Total orders</option>
+          <option value="revenue">Total revenue</option>
+        </select>
+      </div>
+
+      <div id="report-body">
+        <div class="empty">Loading report…</div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/main.js"></script>
+  <script>
+    function fmtMoney(n) { return '$' + (Number(n) || 0).toFixed(2); }
+    function escapeHtml(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+    function badge(s) {
+      const v = String(s || '').toUpperCase();
+      if (v === 'PAID')             return '<span class="badge badge-success">Paid</span>';
+      if (v === 'COLLECTED' || v === 'DELIVERED') return '<span class="badge badge-grey">Collected</span>';
+      if (v === 'CANCELLED')        return '<span class="badge badge-danger">Cancelled</span>';
+      if (v === 'PENDING_PAYMENT')  return '<span class="badge badge-warning">Awaiting payment</span>';
+      if (v === 'PLACED')           return '<span class="badge badge-success">Confirmed</span>';
+      return '<span class="badge">' + v + '</span>';
+    }
+
+    function getTraderName() {
+      const u = getCurrentUser();
+      const shop = u?.shop?.shop_name;
+      document.getElementById('trader-name').textContent = shop ? shop : (u?.name || 'Trader');
+    }
+
+    function getReportType() {
+      const p = new URLSearchParams(window.location.search);
+      const t = (p.get('type') || 'daily').toLowerCase();
+      return ['daily', 'weekly', 'monthly'].includes(t) ? t : 'daily';
+    }
+
+    function getAdminShopOverride() {
+      // When an admin opens this page from trader-management.html they pass
+      // ?shop_id=N — get-trader-report.php already accepts that for the admin
+      // role, but trader-side fetches must forward the parameter.
+      const p = new URLSearchParams(window.location.search);
+      const v = parseInt(p.get('shop_id'), 10);
+      return Number.isInteger(v) && v > 0 ? v : null;
+    }
+
+    function selectTab(type) {
+      document.querySelectorAll('.tab').forEach(el => {
+        el.classList.toggle('active', el.dataset.type === type);
+      });
+      document.querySelectorAll('.sidebar-link').forEach(a => {
+        a.classList.remove('active');
+      });
+      document.querySelector(`.sidebar-link[href="reports.html?type=${type}"]`)?.classList.add('active');
+
+      const titles = {
+        daily:   ['Daily order report',  'Orders placed today against your shop, plus a snapshot of current stock.'],
+        weekly:  ['Weekly finance',      'Income from delivered/paid orders against your shop in the last 7 days.'],
+        monthly: ['Monthly sales',       'Sales by product over the last 30 days — sortable for stock-planning.'],
+      };
+      document.getElementById('report-title').textContent = titles[type][0];
+      document.getElementById('report-sub').textContent  = titles[type][1];
+      document.getElementById('toolbar').style.display = type === 'monthly' ? 'flex' : 'none';
+    }
+
+    async function loadReport(type) {
+      const body = document.getElementById('report-body');
+      body.innerHTML = '<div class="empty">Loading report…</div>';
+      const sort = document.getElementById('sort-select').value || 'name';
+
+      try {
+        const adminShopId = getAdminShopOverride();
+        const url = '../../api/get-trader-report.php?type=' + encodeURIComponent(type)
+                  + (type === 'monthly' ? '&sort=' + encodeURIComponent(sort) : '')
+                  + (adminShopId ? '&shop_id=' + adminShopId : '');
+        const res = await fetch(url, { credentials: 'include' });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.success) throw new Error(data.message || ('HTTP ' + res.status));
+        renderReport(type, data);
+      } catch (err) {
+        body.innerHTML = '<div class="err">' + escapeHtml(err.message) + '</div>';
+      }
+    }
+
+    function renderReport(type, data) {
+      const body = document.getElementById('report-body');
+
+      if (type === 'daily') {
+        const orders = data.orders || [];
+        const stock  = data.stock  || [];
+        const totalOrders  = orders.length;
+        const totalRevenue = orders.reduce((s,o) => s + Number(o.TOTAL_AMOUNT||0), 0);
+        body.innerHTML = `
+          <div class="summary-strip">
+            <div class="summary-tile"><div class="label">Orders today</div><div class="value">${totalOrders}</div></div>
+            <div class="summary-tile"><div class="label">Revenue today</div><div class="value">${fmtMoney(totalRevenue)}</div></div>
+            <div class="summary-tile"><div class="label">Products in stock</div><div class="value">${stock.length}</div></div>
+          </div>
+          <div class="report-card">
+            <h3>Orders placed today (label each for collection)</h3>
+            ${ orders.length === 0
+              ? '<div class="empty">No orders for your shop today.</div>'
+              : `<table class="invoice-table">
+                <thead><tr>
+                  <th>Order ID</th><th>Customer</th><th>Collection date</th><th>Slot</th><th>Total</th><th>Status</th>
+                </tr></thead>
+                <tbody>${ orders.map(o => `
+                  <tr>
+                    <td>#CC-${o.ORDER_ID}</td>
+                    <td>${escapeHtml(o.CUSTOMER_NAME)}</td>
+                    <td>${escapeHtml(o.COLLECTION_DATE || '—')}</td>
+                    <td>${escapeHtml(o.TIME_SLOT || '—')}</td>
+                    <td>${fmtMoney(o.TOTAL_AMOUNT)}</td>
+                    <td>${badge(o.STATUS)}</td>
+                  </tr>`).join('')}</tbody>
+                </table>` }
+          </div>
+          <div class="report-card">
+            <h3>Current stock (lowest first)</h3>
+            ${ stock.length === 0
+              ? '<div class="empty">No products yet — add one from "Add product".</div>'
+              : `<table class="invoice-table">
+                <thead><tr><th>Product</th><th>Stock remaining</th></tr></thead>
+                <tbody>${ stock.map(s => `
+                  <tr>
+                    <td>${escapeHtml(s.NAME)}</td>
+                    <td>${ Number(s.STOCK_QUANTITY) < 10
+                            ? '<span style="color:#c62828;font-weight:600;">' + s.STOCK_QUANTITY + ' — low</span>'
+                            : s.STOCK_QUANTITY }</td>
+                  </tr>`).join('')}</tbody>
+                </table>` }
+          </div>`;
+        return;
+      }
+
+      if (type === 'weekly') {
+        const orders = data.orders || [];
+        const total  = orders.reduce((s,o) => s + Number(o.SUBTOTAL||0), 0);
+        const distinct = new Set(orders.map(o => o.ORDER_ID)).size;
+        body.innerHTML = `
+          <div class="summary-strip">
+            <div class="summary-tile"><div class="label">Orders this week</div><div class="value">${distinct}</div></div>
+            <div class="summary-tile"><div class="label">Revenue (your shop)</div><div class="value">${fmtMoney(total)}</div></div>
+            <div class="summary-tile"><div class="label">Line items</div><div class="value">${orders.length}</div></div>
+          </div>
+          <div class="report-card">
+            <h3>Line items from the last 7 days (paid + delivered)</h3>
+            ${ orders.length === 0
+              ? '<div class="empty">No paid orders in the last 7 days.</div>'
+              : `<table class="invoice-table">
+                <thead><tr>
+                  <th>Order ID</th><th>Date</th><th>Product</th><th>Qty</th><th>Subtotal</th><th>Status</th>
+                </tr></thead>
+                <tbody>${ orders.map(o => `
+                  <tr>
+                    <td>#CC-${o.ORDER_ID}</td>
+                    <td>${escapeHtml(o.ORDER_DATE)}</td>
+                    <td>${escapeHtml(o.PRODUCT_NAME)}</td>
+                    <td>${o.QUANTITY}</td>
+                    <td>${fmtMoney(o.SUBTOTAL)}</td>
+                    <td>${badge(o.STATUS)}</td>
+                  </tr>`).join('')}</tbody>
+                </table>
+                <p style="margin-top:14px;font-size:13px;color:var(--grey-mid);">Cobble Cart will settle this amount to your registered PayPal email at the end of the week.</p>` }
+          </div>`;
+        return;
+      }
+
+      if (type === 'monthly') {
+        const products = data.products || [];
+        const summary  = data.summary  || { TOTAL_ORDERS: 0, TOTAL_REVENUE: 0 };
+        body.innerHTML = `
+          <div class="summary-strip">
+            <div class="summary-tile"><div class="label">Total orders (30d)</div><div class="value">${summary.TOTAL_ORDERS || 0}</div></div>
+            <div class="summary-tile"><div class="label">Total revenue (30d)</div><div class="value">${fmtMoney(summary.TOTAL_REVENUE)}</div></div>
+            <div class="summary-tile"><div class="label">Products sold</div><div class="value">${products.length}</div></div>
+          </div>
+          <div class="report-card">
+            <h3>Sales by product</h3>
+            ${ products.length === 0
+              ? '<div class="empty">No sales recorded in the last 30 days.</div>'
+              : `<table class="invoice-table">
+                <thead><tr>
+                  <th>Product</th><th>Orders</th><th>Quantity sold</th><th>Revenue</th>
+                </tr></thead>
+                <tbody>${ products.map(p => `
+                  <tr>
+                    <td>${escapeHtml(p.PRODUCT_NAME)}</td>
+                    <td>${p.TOTAL_ORDERS}</td>
+                    <td>${p.TOTAL_QTY}</td>
+                    <td>${fmtMoney(p.TOTAL_REVENUE)}</td>
+                  </tr>`).join('')}</tbody>
+                </table>` }
+          </div>`;
+        return;
+      }
+    }
+
+    // Wire it all up
+    document.addEventListener('DOMContentLoaded', () => {
+      getTraderName();
+      const type = getReportType();
+      selectTab(type);
+      loadReport(type);
+
+      document.querySelectorAll('.tab').forEach(t => {
+        t.addEventListener('click', () => {
+          const newType = t.dataset.type;
+          const adminShopId = getAdminShopOverride();
+          const newUrl = 'reports.html?type=' + newType + (adminShopId ? '&shop_id=' + adminShopId : '');
+          history.replaceState({}, '', newUrl);
+          selectTab(newType);
+          // Also fix the sidebar links so they keep the shop_id while admin is acting-as
+          if (adminShopId) {
+            document.querySelectorAll('.sidebar-link[href^="reports.html"]').forEach(a => {
+              const m = a.getAttribute('href').match(/type=([^&]+)/);
+              if (m) a.setAttribute('href', 'reports.html?type=' + m[1] + '&shop_id=' + adminShopId);
+            });
+          }
+          loadReport(newType);
+        });
+      });
+
+      // If admin is acting-as, surface a banner + patch sidebar links to keep the shop_id
+      const adminShopId = getAdminShopOverride();
+      if (adminShopId) {
+        const banner = document.createElement('div');
+        banner.style.cssText = 'background:#fff8ee;border:1px solid #f0d99a;color:#8a6512;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;';
+        banner.innerHTML = '🔧 Viewing as admin — reports scoped to <strong>shop_id ' + adminShopId
+                          + '</strong>. <a href="../admin/trader-management.html" style="color:#8a6512;text-decoration:underline;">Back to trader management</a>';
+        document.querySelector('.panel').insertBefore(banner, document.querySelector('.panel .sub').nextSibling);
+
+        document.querySelectorAll('.sidebar-link[href^="reports.html"]').forEach(a => {
+          const m = a.getAttribute('href').match(/type=([^&]+)/);
+          if (m) a.setAttribute('href', 'reports.html?type=' + m[1] + '&shop_id=' + adminShopId);
+        });
+      }
+
+      document.getElementById('sort-select').addEventListener('change', () => {
+        loadReport('monthly');
+      });
+    });
+  </script>
+</body>
+</html>

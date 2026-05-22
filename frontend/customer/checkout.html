@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout — Cobble Cart</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .checkout-layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+    .steps-bar {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 28px;
+    }
+    .step-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--grey-mid);
+    }
+    .step-item.active { color: var(--orange-dark); font-weight: 500; }
+    .step-item.done { color: var(--dark); }
+    .step-num {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      border: 1.5px solid var(--grey-mid);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 600;
+    }
+    .step-item.active .step-num { border-color: var(--orange); background: var(--orange); color: var(--dark); }
+    .step-item.done .step-num { border-color: var(--dark); background: var(--dark); color: var(--white); }
+    .step-arrow { color: var(--border); margin: 0 12px; font-size: 16px; }
+    .slot-option {
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 18px;
+      cursor: pointer;
+      margin-bottom: 10px;
+      transition: all 0.2s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .slot-option:hover { border-color: var(--orange-light); }
+    .slot-option.selected { border-color: var(--orange); background: #FFF3DC; }
+    .slot-option .slot-time { font-size: 14px; font-weight: 600; }
+    .slot-option .slot-avail { font-size: 12px; color: var(--grey-mid); }
+    .slot-option.full { opacity: 0.5; cursor: not-allowed; }
+    .payment-option {
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 18px;
+      cursor: pointer;
+      margin-bottom: 10px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .payment-option:hover { border-color: var(--orange-light); }
+    .payment-option.selected { border-color: var(--orange); background: #FFF3DC; }
+    .payment-option input { accent-color: var(--orange); }
+    .order-summary-item { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; }
+    .order-summary-item .name { color: var(--grey-dark); }
+    .order-summary-item .price { font-weight: 500; }
+    .total-row { display: flex; justify-content: space-between; font-size: 16px; font-weight: 700; padding-top: 12px; border-top: 1px solid var(--border); margin-top: 8px; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+            <a href="../index.html" class="navbar-logo">
+      <img src="../images/logo-full.png" class="site-logo" alt="Cobble Cart">
+    </a>
+      <a href="../index.html" class="site-name">Cobble<em>Cart</em></a>
+    </div>
+    <div class="navbar-actions">
+      <a href="cart.html" class="btn btn-grey">Back to basket</a>
+    </div>
+  </nav>
+
+  <div style="max-width:1100px;margin:0 auto;padding:28px 24px 0;">
+    <div class="steps-bar">
+      <div class="step-item done"><div class="step-num">✓</div> Basket</div>
+      <span class="step-arrow">→</span>
+      <div class="step-item active"><div class="step-num">2</div> Collection slot</div>
+      <span class="step-arrow">→</span>
+      <div class="step-item"><div class="step-num">3</div> Payment</div>
+      <span class="step-arrow">→</span>
+      <div class="step-item"><div class="step-num">4</div> Confirmation</div>
+    </div>
+  </div>
+
+  <div class="checkout-layout">
+
+    <!-- Left: slot + payment -->
+    <div>
+      <!-- Collection slot -->
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-title">Select a collection slot</div>
+        <div class="alert alert-info">Collection is available Wednesday, Thursday and Friday only: 10:00-13:00, 13:00-16:00, or 16:00-19:00. You must select a slot at least 24 hours from now.</div>
+
+        <div id="slots-container" style="margin-top:16px;">
+          <p style="font-size:13px;color:var(--grey-mid);">Loading available slots…</p>
+        </div>
+        <div id="slot-display" style="margin-top:16px;font-size:13px;color:var(--grey-mid);">No slot selected yet</div>
+        <input type="hidden" id="selected-slot">
+      </div>
+
+      <!-- Payment -->
+      <div class="card">
+        <div class="card-title">Payment method</div>
+        <div class="payment-option selected" onclick="selectPayment(this, 'paypal')">
+          <input type="radio" name="payment" checked>
+          <div>
+            <div style="font-size:14px;font-weight:600;">PayPal</div>
+            <div style="font-size:12px;color:var(--grey-mid);">Pay securely via your PayPal account</div>
+          </div>
+        </div>
+        <div class="payment-option" onclick="selectPayment(this, 'stripe')">
+          <input type="radio" name="payment">
+          <div>
+            <div style="font-size:14px;font-weight:600;">Stripe — Card payment</div>
+            <div style="font-size:12px;color:var(--grey-mid);">Pay securely with debit or credit card</div>
+          </div>
+        </div>
+        <input type="hidden" id="selected-payment" value="paypal">
+      </div>
+    </div>
+
+    <!-- Right: order summary -->
+    <div>
+      <div class="card" style="position:sticky;top:80px;">
+        <h3 style="font-size:16px;font-weight:600;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);">Order summary</h3>
+        <div id="checkout-items">
+          <p style="font-size:13px;color:var(--grey-mid);">Your basket is empty</p>
+        </div>
+        <div class="total-row">
+          <span>Total</span>
+          <span id="checkout-total">$0.00</span>
+        </div>
+        <div style="margin-top:16px;">
+          <button onclick="placeOrder()" class="btn btn-primary btn-full" style="padding:12px;font-size:15px;">Place order & pay</button>
+        </div>
+        <p style="font-size:11px;color:var(--grey-mid);margin-top:12px;text-align:center;">You will be redirected to your payment provider to complete your order.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-bottom">&copy; 2026 Cobble Cart. All rights reserved.</div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+  <script>
+    function selectPayment(el, method) {
+      document.querySelectorAll('.payment-option').forEach(p => {
+        p.classList.remove('selected');
+        p.querySelector('input').checked = false;
+      });
+      el.classList.add('selected');
+      el.querySelector('input').checked = true;
+      document.getElementById('selected-payment').value = method;
+    }
+
+    function placeOrder() {
+      const slotId = parseInt(document.getElementById('selected-slot').value, 10) || 0;
+      const paymentMethod = document.getElementById('selected-payment').value.trim();
+      const cart = getCart();
+      const user = JSON.parse(localStorage.getItem('cc_user') || 'null');
+
+      if (!user || !user.user_id) {
+        showAlert('Please log in before placing an order.', 'error');
+        setTimeout(() => window.location.href = 'login.html', 800);
+        return;
+      }
+
+      if (!slotId) {
+        showAlert('Please select a collection slot', 'error');
+        return;
+      }
+
+      if (!cart.length) {
+        showAlert('Your basket is empty', 'error');
+        return;
+      }
+
+      const items = cart.map(item => ({ product_id: item.id, quantity: item.qty }));
+      const payload = {
+        customer_id: user.user_id,
+        slot_id: slotId,
+        payment_method: paymentMethod,
+        items
+      };
+
+      // Client-side pre-check: highlight any items exceeding the max allowed
+      const over = cart.filter(i => Number(i.qty) > 20);
+      if (over.length) {
+        // Highlight in cart and checkout summary, then navigate to cart for editing
+        try { clearCartHighlights(); } catch(e){}
+        try { highlightCartItemsExceed(20); } catch(e){}
+        showAlert('Some items exceed the 20-unit limit — please adjust your basket.', 'error');
+        setTimeout(() => { window.location.href = 'cart.html'; }, 900);
+        return;
+      }
+
+      showAlert('Creating your order...', 'info');
+
+      fetch('../../api/place-order.php', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(async res => {
+        const data = await res.json().catch(() => ({}));
+        return { ok: res.ok, status: res.status, data };
+      })
+      .then(({ ok, data }) => {
+        if (ok && data.success && data.order_id) {
+          localStorage.removeItem('cobblecart_cart');
+          localStorage.setItem('cc_last_order', String(data.order_id));
+          showAlert('Redirecting to PayPal...', 'success');
+          // PayPal handler will redirect back to invoice.html on success.
+          window.location.href = '../../' + data.redirect_path;
+        } else {
+          // Map known backend messages to friendlier UI text
+          const raw = (data && data.message) ? String(data.message) : '';
+          const friendly = mapOrderError(raw);
+          showAlert(friendly, 'error');
+          // If the backend enforced the 20-unit rule, highlight offending items
+          if (raw.toLowerCase().includes('more than 20') || raw.includes('-20020') || raw.toLowerCase().includes('20 units')) {
+            try { highlightCartItemsExceed(20); } catch(e){}
+            // Send user back to the cart to correct quantities
+            setTimeout(() => { window.location.href = 'cart.html'; }, 900);
+          }
+        }
+      })
+      .catch(err => {
+        showAlert('Unable to reach the server: ' + err.message, 'error');
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const items = document.getElementById('checkout-items');
+      const totalEl = document.getElementById('checkout-total');
+      const cart = getCart();
+      if (cart.length > 0) {
+        items.innerHTML = cart.map(i => `
+          <div class="order-summary-item">
+            <span class="name">${i.name} x${i.qty}</span>
+            <span class="price">${money(i.price * i.qty)}</span>
+          </div>
+        `).join('');
+        totalEl.textContent = '$' + getCartTotal();
+      }
+      loadSlots();
+    });
+
+    async function loadSlots() {
+      const container = document.getElementById('slots-container');
+      try {
+        const res = await fetch('../../api/get-slots.php', { credentials: 'include' });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message || 'Failed to load slots');
+        if (!data.slots || data.slots.length === 0) {
+          container.innerHTML = '<p style="font-size:13px;color:#c62828;">No upcoming collection slots available. Please check back later.</p>';
+          return;
+        }
+
+        // Group by collection date
+        const byDate = {};
+        for (const s of data.slots) {
+          const k = s.COLLECTION_DATE;
+          if (!byDate[k]) byDate[k] = { label: s.DATE_LABEL.replace(/\s+/g, ' ').trim(), rows: [] };
+          byDate[k].rows.push(s);
+        }
+
+        const previousSelected = parseInt(localStorage.getItem('cobblecart_slot') || '0', 10);
+        let html = '';
+        for (const date of Object.keys(byDate)) {
+          html += '<p style="font-size:13px;font-weight:600;margin:16px 0 10px;color:var(--grey-dark);">' + byDate[date].label + '</p>';
+          for (const s of byDate[date].rows) {
+            const taken = Number(s.TAKEN) || 0;
+            const max = Number(s.MAX_ORDERS) || 20;
+            const isFull = taken >= max;
+            const cls = 'slot-option' + (isFull ? ' full' : '') + (Number(s.SLOT_ID) === previousSelected && !isFull ? ' selected' : '');
+            const onclickAttr = isFull ? '' : `onclick="selectSlot(this, ${s.SLOT_ID}, '${s.TIME_SLOT.replace(/'/g, "\\'")}')"`;
+            html += `
+              <div class="${cls}" data-slot="${s.SLOT_ID}" ${onclickAttr}>
+                <span class="slot-time">${s.TIME_SLOT}</span>
+                <span class="slot-avail"${isFull ? ' style="color:#c62828;"' : ''}>
+                  ${isFull ? 'Full — ' + max + ' of ' + max : taken + ' of ' + max + ' slots taken'}
+                </span>
+              </div>`;
+          }
+        }
+        container.innerHTML = html;
+
+        if (previousSelected) {
+          const el = container.querySelector('.slot-option.selected');
+          if (el) {
+            document.getElementById('selected-slot').value = previousSelected;
+            const timeText = el.querySelector('.slot-time')?.textContent || '';
+            document.getElementById('slot-display').textContent = 'Slot ' + previousSelected + ' - ' + timeText;
+          } else {
+            localStorage.removeItem('cobblecart_slot');
+            document.getElementById('selected-slot').value = '';
+            document.getElementById('slot-display').textContent = 'No slot selected yet';
+          }
+        }
+      } catch (err) {
+        container.innerHTML = '<p style="font-size:13px;color:#c62828;">Could not load slots: ' + err.message + '</p>';
+      }
+    }
+
+    // Translate backend error messages into friendly UI messages for checkout
+    function mapOrderError(rawMessage) {
+      if (!rawMessage) return 'Order failed, please try again.';
+      const m = rawMessage.toLowerCase();
+      if (m.includes('more than 20') || m.includes('cannot purchase more than 20') || m.includes('-20020') || m.includes('more than 20 units')) {
+        return 'You cannot purchase more than 20 units of a single product. Please reduce the quantity in your basket.';
+      }
+      if (m.includes('not enough stock') || m.includes('insufficient stock')) {
+        return 'One or more items in your basket are out of stock or have insufficient quantity. Please adjust your basket.';
+      }
+      if (m.includes('outside allowed range') || m.includes('order quantity outside')) {
+        return 'One or more items exceed the product limits (min/max). Please adjust quantities.';
+      }
+      if (m.includes('collection slot') && m.includes('24 hours')) {
+        return 'Please choose a collection slot at least 24 hours from now.';
+      }
+      if (m.includes('collection') && (m.includes('wednesday') || m.includes('thursday') || m.includes('friday'))) {
+        return 'Collection is only available on Wednesday, Thursday, and Friday.';
+      }
+      if (m.includes('slot is full')) {
+        return 'That collection slot is full. Please choose another slot.';
+      }
+      // Generic fallback uses original message for additional context
+      return rawMessage || 'Order failed, please try again.';
+    }
+  </script>
+</body>
+</html>

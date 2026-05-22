@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Management — Cobble Cart</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <nav class="navbar">
+            <a href="../index.html" class="navbar-logo">
+      <img src="../images/logo-full.png" class="site-logo" alt="Cobble Cart">
+    </a>
+      <span class="site-name">Cobble<em>Cart</em></span>
+      <span style="font-size:11px;color:#aaa;background:#333;padding:2px 8px;border-radius:3px;margin-left:4px;">Admin Panel</span>
+    </div>
+    <div class="navbar-actions">
+      <span style="font-size:13px;color:#ccc;">Admin</span>
+      <a href="../customer/login.html" class="btn btn-outline" style="font-size:13px;padding:6px 14px;">Log out</a>
+    </div>
+  </nav>
+
+  <div class="layout-with-sidebar">
+
+    <div class="sidebar">
+      <div class="sidebar-label">Admin menu</div>
+      <a class="sidebar-link" href="dashboard.html">Dashboard</a>
+      <a class="sidebar-link" href="trader-management.html">Trader management</a>
+      <a class="sidebar-link" href="add-trader.html">Add trader</a>
+      <a class="sidebar-link active" href="customer-management.html">Customer management</a>
+      <a class="sidebar-link" href="slots.html">Collection slots</a>
+      <a class="sidebar-link" href="orders.html">All orders</a>
+      <a class="sidebar-link" href="messages.html">Messages</a>
+      <a class="sidebar-link" href="reset-passwords.html">Reset passwords</a>
+      <div class="sidebar-footer">
+        <a href="../customer/login.html" style="font-size:13px;color:#888;">Log out</a>
+      </div>
+    </div>
+
+    <div class="main-content">
+
+      <div class="page-header">
+        <div>
+          <h1>Customer management</h1>
+          <p>View and manage all registered customer accounts</p>
+        </div>
+        <span id="total-pill" style="font-size:13px;color:var(--grey-mid);background:var(--grey-light);border:1px solid var(--border);padding:6px 14px;border-radius:6px;">Loading…</span>
+      </div>
+
+      <!-- Search and filter -->
+      <div class="search-bar" style="margin-bottom:20px;">
+        <input type="text" id="search-input" placeholder="Search by name or email address..." oninput="filterCustomers()">
+        <select id="status-filter" aria-label="Filter customers by status" onchange="filterCustomers()">
+          <option value="">All statuses</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+        <select id="sort-filter" aria-label="Sort customers" onchange="sortCustomers()">
+          <option value="name">Sort by: Name</option>
+          <option value="date">Sort by: Date registered</option>
+          <option value="orders">Sort by: Total orders</option>
+        </select>
+        <button class="btn btn-primary" onclick="filterCustomers()">Search</button>
+      </div>
+
+      <!-- Customers table -->
+      <div class="table-wrapper">
+        <table id="customers-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Full name</th>
+              <th>Email address</th>
+              <th>Registered</th>
+              <th>Total orders</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="customers-body">
+            <!-- Rendered by JS -->
+          </tbody>
+        </table>
+        <div class="pagination">
+          <span class="pagination-info" id="pagination-info">—</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="../js/main.js"></script>
+  <script>
+    let allCustomers = [];   // populated from api/get-customers.php
+    let displayed = [];
+
+    function escapeHtml(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+    function fmtDate(iso) {
+      if (!iso) return '—';
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return iso;
+      return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    async function loadCustomers() {
+      const body = document.getElementById('customers-body');
+      body.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#888;padding:30px;">Loading customers…</td></tr>';
+      try {
+        const sort = document.getElementById('sort-filter').value || 'name';
+        const res = await fetch('../../api/get-customers.php?sort=' + encodeURIComponent(sort), { credentials: 'include' });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.success) throw new Error(data.message || ('HTTP ' + res.status));
+        allCustomers = (data.customers || []).map((c, i) => ({
+          row:        i + 1,
+          user_id:    Number(c.USER_ID),
+          name:       c.NAME || '',
+          email:      c.EMAIL || '',
+          registered: c.CREATED_DATE,
+          orders:     Number(c.TOTAL_ORDERS) || 0,
+          total_spent: Number(c.TOTAL_SPENT)  || 0,
+          // "Active" = has at least one order or registered in last 90 days; otherwise "Inactive".
+          // (We don't have a USERS.IS_ACTIVE column yet — this is a derived view.)
+          status: (Number(c.TOTAL_ORDERS) > 0) ? 'active' : 'inactive',
+        }));
+        displayed = [...allCustomers];
+        document.getElementById('total-pill').textContent = `Total: ${allCustomers.length} customer${allCustomers.length === 1 ? '' : 's'}`;
+        renderCustomers();
+      } catch (err) {
+        body.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#c62828;padding:30px;">' + escapeHtml(err.message) + '</td></tr>';
+        document.getElementById('total-pill').textContent = '—';
+      }
+    }
+
+    function renderCustomers() {
+      const body = document.getElementById('customers-body');
+      if (displayed.length === 0) {
+        body.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#888;padding:30px;">No customers match your filters.</td></tr>';
+        document.getElementById('pagination-info').textContent = 'Showing 0 of ' + allCustomers.length + ' customers';
+        return;
+      }
+      body.innerHTML = displayed.map((c, idx) => `
+        <tr>
+          <td>${idx + 1}</td>
+          <td style="font-weight:500;">${escapeHtml(c.name) || '<em style="color:#999;">(no name)</em>'}</td>
+          <td>${escapeHtml(c.email)}</td>
+          <td>${fmtDate(c.registered)}</td>
+          <td>${c.orders}</td>
+          <td><span class="badge ${c.status === 'active' ? 'badge-success' : 'badge-grey'}">
+            ${c.status === 'active' ? 'Active' : 'No orders yet'}
+          </span></td>
+          <td>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button class="btn btn-grey" style="padding:4px 10px;font-size:12px;" onclick="viewCustomer(${c.user_id})">View</button>
+              <button class="btn btn-grey" style="padding:4px 10px;font-size:12px;" onclick="resetPassword(${c.user_id})">Reset password</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+      document.getElementById('pagination-info').textContent =
+        `Showing ${displayed.length} of ${allCustomers.length} customer${allCustomers.length === 1 ? '' : 's'}`;
+    }
+
+    function filterCustomers() {
+      const q = document.getElementById('search-input').value.toLowerCase();
+      const status = document.getElementById('status-filter').value;
+      displayed = allCustomers.filter(c =>
+        ((c.name + ' ' + c.email).toLowerCase().includes(q)) &&
+        (!status || c.status === status)
+      );
+      renderCustomers();
+    }
+
+    function sortCustomers() {
+      // Refetch with the new sort order from the server (it does the heavy lifting).
+      loadCustomers();
+    }
+
+    function viewCustomer(userId) {
+      const c = allCustomers.find(x => x.user_id === userId);
+      if (!c) return;
+      const orderWord = c.orders === 1 ? 'order' : 'orders';
+      const html =
+        `<strong>${escapeHtml(c.name) || '(no name)'}</strong><br>` +
+        `<span style="color:#666;font-size:12.5px;">${escapeHtml(c.email)} &middot; user #${c.user_id}</span><br><br>` +
+        `Registered: ${fmtDate(c.registered)}<br>` +
+        `Orders: ${c.orders} ${orderWord}<br>` +
+        `Lifetime spend: <strong>$${c.total_spent.toFixed(2)}</strong>`;
+      showModal('Customer details', html);
+    }
+
+    async function resetPassword(userId) {
+      const c = allCustomers.find(x => x.user_id === userId);
+      if (!c) return;
+      if (!confirm('Generate a new password for ' + c.name + ' (' + c.email + ')?')) return;
+      try {
+        const res = await fetch('../../api/admin-reset-password.php', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: userId })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.success) throw new Error(data.message || ('HTTP ' + res.status));
+
+        showModal('Password reset for ' + escapeHtml(c.name),
+          `<p style="margin-bottom:10px;">Share this new password with the user securely. ` +
+          `It won't be shown again.</p>` +
+          `<div style="background:#fdf6e3;border:1px solid #f0d99a;padding:12px;border-radius:8px;` +
+          `font-family:'Courier New',monospace;font-size:14px;color:#5a4318;">` +
+          `${escapeHtml(data.new_password)}</div>`);
+      } catch (err) {
+        showAlert('Reset failed: ' + err.message, 'error');
+      }
+    }
+
+    // Tiny inline modal helper (used by both View and Reset-password)
+    function showModal(title, html) {
+      let backdrop = document.getElementById('inline-modal');
+      if (!backdrop) {
+        backdrop = document.createElement('div');
+        backdrop.id = 'inline-modal';
+        backdrop.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:999;';
+        backdrop.innerHTML =
+          '<div style="background:#fff;border-radius:12px;padding:24px 26px;width:100%;max-width:460px;box-shadow:0 18px 44px rgba(0,0,0,0.25);">' +
+            '<h3 id="modal-title" style="font-size:16px;font-weight:700;margin-bottom:14px;"></h3>' +
+            '<div id="modal-body" style="font-size:13.5px;color:#333;"></div>' +
+            '<div style="display:flex;justify-content:flex-end;margin-top:18px;">' +
+              '<button type="button" class="btn btn-primary" style="padding:6px 16px;font-size:13px;" onclick="document.getElementById(\'inline-modal\').remove()">Close</button>' +
+            '</div>' +
+          '</div>';
+        backdrop.addEventListener('click', e => { if (e.target === backdrop) backdrop.remove(); });
+        document.body.appendChild(backdrop);
+      }
+      document.getElementById('modal-title').textContent = title;
+      document.getElementById('modal-body').innerHTML = html;
+    }
+
+    document.addEventListener('DOMContentLoaded', loadCustomers);
+  </script>
+</body>
+</html>

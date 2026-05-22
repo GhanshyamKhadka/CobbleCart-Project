@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify Email - Cobble Cart</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .auth-wrapper {
+      min-height: calc(100vh - 60px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+    .auth-box {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 36px 40px;
+      width: 100%;
+      max-width: 500px;
+    }
+    .auth-box h1 { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+    .auth-box .sub { font-size: 13px; color: var(--grey-mid); margin-bottom: 28px; }
+    .auth-footer { text-align: center; margin-top: 20px; font-size: 13px; color: var(--grey-mid); }
+    .success-box { background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 8px; padding: 20px; text-align: center; display: none; }
+    .success-box h3 { color: #2e7d32; margin-bottom: 8px; }
+    .success-box p { font-size: 13px; color: #388e3c; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+            <a href="../index.html" class="navbar-logo">
+      <img src="../images/logo-full.png" class="site-logo" alt="Cobble Cart">
+    </a>
+      <a href="../index.html" class="site-name">Cobble<em>Cart</em></a>
+    </div>
+    <div class="navbar-actions">
+      <a href="login.html" class="btn btn-outline">Log in</a>
+    </div>
+  </nav>
+
+  <div class="auth-wrapper">
+    <div class="auth-box">
+      <div id="verify-wrapper">
+        <h1>Check your email</h1>
+        <p class="sub">Enter the 6-digit verification code sent to your email address.</p>
+
+        <form id="verify-form" novalidate>
+          <div class="form-group">
+            <label>Email address <span class="required">*</span></label>
+            <input type="email" id="email" autocomplete="email" required>
+            <span class="form-error" id="email-error"></span>
+          </div>
+
+          <div class="form-group">
+            <label>Verification code <span class="required">*</span></label>
+            <input type="text" id="verification-code" placeholder="Enter 6-digit code" maxlength="6" inputmode="numeric" autocomplete="one-time-code" required style="text-align:center; font-size:18px; letter-spacing:2px;">
+            <span class="form-error" id="code-error"></span>
+          </div>
+
+          <button type="submit" id="verify-submit" class="btn btn-primary btn-full">Verify & Create Account</button>
+          <button type="button" id="resend-submit" class="btn btn-outline btn-full" style="margin-top:10px;">Resend Code</button>
+        </form>
+
+        <div class="auth-footer">
+          Wrong email? <a href="register.html">Register again</a>
+        </div>
+      </div>
+
+      <div class="success-box" id="success-box">
+        <h3>Account created!</h3>
+        <p>Your account has been created successfully. You can now log in using your email and password.</p>
+        <a href="login.html" class="btn btn-primary" style="margin-top:14px;display:inline-block;">Go to login</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/main.js"></script>
+  <script>
+    const XAMPP_API_BASE = 'http://localhost/cobblecart/cobblecart/api/';
+
+    function notify(message, type) {
+      if (typeof showAlert === 'function') {
+        showAlert(message, type);
+        return;
+      }
+      alert(message);
+    }
+
+    function apiUrl(file) {
+      return new URL('../../api/' + file, window.location.href).href;
+    }
+
+    function parseApiResponse(text) {
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        throw new Error(text.substring(0, 200) || 'Invalid server response');
+      }
+    }
+
+    async function postJson(file, payload) {
+      const response = await fetch(apiUrl(file), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const text = await response.text();
+      const data = parseApiResponse(text);
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Request failed');
+      }
+      return data;
+    }
+
+    function getEmail() {
+      return document.getElementById('email').value.trim();
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const params = new URLSearchParams(window.location.search);
+      const email = params.get('email') || localStorage.getItem('cc_pending_registration_email') || '';
+      document.getElementById('email').value = email;
+      document.getElementById('verification-code').focus();
+
+      document.getElementById('verify-form').addEventListener('submit', async function (event) {
+        event.preventDefault();
+        document.getElementById('email-error').textContent = '';
+        document.getElementById('code-error').textContent = '';
+
+        const code = document.getElementById('verification-code').value.trim();
+        const email = getEmail();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          document.getElementById('email-error').textContent = 'Enter a valid email';
+          return;
+        }
+        if (!/^\d{6}$/.test(code)) {
+          document.getElementById('code-error').textContent = 'Please enter a valid 6-digit code';
+          return;
+        }
+
+        const button = document.getElementById('verify-submit');
+        button.disabled = true;
+        button.textContent = 'Creating account...';
+
+        try {
+          await postJson('verify-email.php', { email, code });
+          localStorage.removeItem('cc_pending_registration_email');
+          document.getElementById('verify-wrapper').style.display = 'none';
+          document.getElementById('success-box').style.display = 'block';
+        } catch (err) {
+          document.getElementById('code-error').textContent = err.message;
+          notify('Verification error: ' + err.message, 'error');
+        } finally {
+          button.disabled = false;
+          button.textContent = 'Verify & Create Account';
+        }
+      });
+
+      document.getElementById('resend-submit').addEventListener('click', async function () {
+        const email = getEmail();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          document.getElementById('email-error').textContent = 'Enter your email first';
+          return;
+        }
+
+        notify('Please go back to registration to resend a code with your account details.', 'info');
+      });
+    });
+  </script>
+</body>
+</html>

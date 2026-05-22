@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — Cobble Cart</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .bottom-grid { display: grid; grid-template-columns: 200px 1fr 280px; gap: 16px; }
+    .recent-orders-panel { grid-column: 1 / -1; overflow-x: auto; }
+    .recent-orders-panel table { min-width: 720px; }
+    .slot-bar { height: 6px; background: #e0e0e0; border-radius: 3px; margin-top: 5px; }
+    .slot-fill { height: 100%; border-radius: 3px; background: var(--orange); }
+    .trader-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .trader-row:last-child { border-bottom: none; }
+    .trader-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--orange-light); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: var(--dark); flex-shrink: 0; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+            <a href="../index.html" class="navbar-logo">
+      <img src="../images/logo-full.png" class="site-logo" alt="Cobble Cart">
+    </a>
+      <span class="site-name">Cobble<em>Cart</em></span>
+      <span style="font-size:11px;color:#aaa;background:#333;padding:2px 8px;border-radius:3px;margin-left:4px;">Admin Panel</span>
+    </div>
+    <div class="navbar-actions">
+      <span id="admin-name" style="font-size:13px;color:#ccc;">Admin</span>
+      <a href="#" onclick="logout(); return false;" class="btn btn-outline" style="font-size:13px;padding:6px 14px;">Log out</a>
+    </div>
+  </nav>
+
+  <div class="layout-with-sidebar">
+
+    <div class="sidebar">
+      <div class="sidebar-label">Admin menu</div>
+      <a class="sidebar-link active" href="dashboard.html">Dashboard</a>
+      <a class="sidebar-link" href="trader-management.html">Trader management</a>
+      <a class="sidebar-link" href="add-trader.html">Add trader</a>
+      <a class="sidebar-link" href="customer-management.html">Customer management</a>
+      <a class="sidebar-link" href="slots.html">Collection slots</a>
+      <a class="sidebar-link" href="orders.html">All orders</a>
+      <a class="sidebar-link" href="messages.html">Messages</a>
+      <a class="sidebar-link" href="reset-passwords.html">Reset passwords</a>
+      <div class="sidebar-footer">
+        <a href="#" onclick="logout(); return false;" style="font-size:13px;color:#888;">Log out</a>
+      </div>
+    </div>
+
+    <div class="main-content">
+
+      <div class="page-header">
+        <div>
+          <h1>Admin Dashboard</h1>
+          <p id="admin-welcome">Cobble Cart system overview — Wednesday 22 March 2026</p>
+        </div>
+        <a href="add-trader.html" class="btn btn-primary">+ Add trader</a>
+      </div>
+
+      <!-- Stats (dynamic — populated by loadAdminStats) -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="label">Total traders</div>
+          <div class="value" id="stat-traders">—</div>
+          <div class="sub" id="stat-traders-sub">Active shops</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Total customers</div>
+          <div class="value" id="stat-customers">—</div>
+          <div class="sub">Registered accounts</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Orders today</div>
+          <div class="value" id="stat-orders-today">—</div>
+          <div class="sub">Across all slots</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Revenue this week</div>
+          <div class="value" id="stat-revenue-week">—</div>
+          <div class="sub">Paid orders, last 7 days</div>
+        </div>
+      </div>
+
+      <!-- Bottom grid -->
+      <div class="bottom-grid">
+
+        <!-- Collection slots -->
+        <div class="card" style="padding:16px;">
+          <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Collection slots</div>
+          <div style="font-size:11px;color:var(--grey-mid);margin-bottom:14px;">Max 20 — Wed/Thu/Fri</div>
+
+          <div style="margin-bottom:12px;">
+            <div style="display:flex;justify-content:space-between;font-size:11px;">
+              <span>10:00–13:00</span><span>14/20</span>
+            </div>
+            <div class="slot-bar"><div class="slot-fill" style="width:70%;"></div></div>
+          </div>
+          <div style="margin-bottom:12px;">
+            <div style="display:flex;justify-content:space-between;font-size:11px;">
+              <span>13:00–16:00</span><span>18/20</span>
+            </div>
+            <div class="slot-bar"><div class="slot-fill" style="width:90%;background:#c0392b;"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;">
+              <span>16:00–19:00</span><span>6/20</span>
+            </div>
+            <div class="slot-bar"><div class="slot-fill" style="width:30%;"></div></div>
+          </div>
+        </div>
+
+        <!-- Pending product approvals -->
+        <div class="table-wrapper">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:14px;font-weight:600;">Products pending approval</span>
+            <a href="dashboard.html" style="font-size:12px;">Refresh</a>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Shop</th>
+                <th>Price</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="pending-products-body">
+              <tr>
+                <td colspan="5" style="text-align:center;color:#888;padding:30px;">Loading pending products…</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Recent orders -->
+        <div class="table-wrapper recent-orders-panel">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:14px;font-weight:600;">Recent orders</span>
+            <a href="dashboard.html" style="font-size:12px;">View all</a>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Slot</th>
+                <th>Amount</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="recent-orders-body">
+              <tr><td colspan="5" style="text-align:center;color:#888;padding:24px;">Loading recent orders…</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Traders -->
+        <div class="card" style="padding:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <span style="font-size:13px;font-weight:600;">Traders</span>
+            <a href="add-trader.html" style="font-size:12px;">Manage</a>
+          </div>
+          <div class="trader-row">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="trader-avatar">BU</div>
+              <div><div style="font-size:12px;font-weight:500;">Butcher</div><div style="font-size:11px;color:var(--grey-mid);">12 products</div></div>
+            </div>
+            <span class="badge badge-success">Active</span>
+          </div>
+          <div class="trader-row">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="trader-avatar">GR</div>
+              <div><div style="font-size:12px;font-weight:500;">Greengrocer</div><div style="font-size:11px;color:var(--grey-mid);">18 products</div></div>
+            </div>
+            <span class="badge badge-success">Active</span>
+          </div>
+          <div class="trader-row">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="trader-avatar">FI</div>
+              <div><div style="font-size:12px;font-weight:500;">Fishmonger</div><div style="font-size:11px;color:var(--grey-mid);">8 products</div></div>
+            </div>
+            <span class="badge badge-success">Active</span>
+          </div>
+          <div class="trader-row">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="trader-avatar">BA</div>
+              <div><div style="font-size:12px;font-weight:500;">Bakery</div><div style="font-size:11px;color:var(--grey-mid);">15 products</div></div>
+            </div>
+            <span class="badge badge-success">Active</span>
+          </div>
+          <div class="trader-row">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="trader-avatar">DE</div>
+              <div><div style="font-size:12px;font-weight:500;">Delicatessen</div><div style="font-size:11px;color:var(--grey-mid);">10 products</div></div>
+            </div>
+            <span class="badge badge-success">Active</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/main.js"></script>
+  <script>
+    function applyAdminProfile() {
+      const user = getCurrentUser();
+      if (!user) return;
+      const name = user.name || 'Admin';
+      document.getElementById('admin-name').textContent = name;
+      document.getElementById('admin-welcome').textContent = `Welcome back, ${name} — ${new Date().toLocaleDateString()}`;
+    }
+
+    async function loadPendingProducts() {
+      try {
+        const res = await fetch('../../api/get-products.php?pending=1', { credentials: 'include' });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message || 'Failed to load pending products');
+        const rows = data.products.map(product => `
+          <tr>
+            <td>${product.NAME}</td>
+            <td>${product.SHOP_NAME}</td>
+            <td>${renderPrice(product)}</td>
+            <td><span class="badge badge-warning">${product.APPROVAL_STATUS}</span></td>
+            <td style="white-space:nowrap;">
+              <button class="btn btn-small btn-primary" onclick="approveVendorProduct(${product.PRODUCT_ID}, 'APPROVED')">Approve</button>
+              <button class="btn btn-small btn-danger" onclick="approveVendorProduct(${product.PRODUCT_ID}, 'REJECTED')">Reject</button>
+            </td>
+          </tr>
+        `).join('');
+        document.getElementById('pending-products-body').innerHTML = rows || '<tr><td colspan="5" style="text-align:center;color:#888;padding:30px;">No pending products</td></tr>';
+      } catch (error) {
+        document.getElementById('pending-products-body').innerHTML = `<tr><td colspan="5" style="text-align:center;color:#c62828;padding:30px;">${error.message}</td></tr>`;
+      }
+    }
+
+    async function approveVendorProduct(productId, action) {
+      try {
+        const res = await fetch('../../api/approve-product.php', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ product_id: productId, action })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.message || 'Approval request failed');
+        showAlert(data.message, 'success');
+        loadPendingProducts();
+      } catch (error) {
+        showAlert(error.message, 'error');
+      }
+    }
+
+    async function loadRecentOrders() {
+      const body = document.getElementById('recent-orders-body');
+      try {
+        const res = await fetch('../../api/get-orders.php', { credentials: 'include' });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.success) throw new Error(data.message || ('HTTP ' + res.status));
+        const orders = (data.orders || []).slice(0, 8);
+        if (!orders.length) {
+          body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888;padding:24px;">No orders yet.</td></tr>';
+          return;
+        }
+        const badge = s => {
+          const v = String(s || '').toUpperCase();
+          if (v === 'PAID')             return '<span class="badge badge-success">Paid</span>';
+          if (v === 'COLLECTED')        return '<span class="badge badge-grey">Collected</span>';
+          if (v === 'CANCELLED')        return '<span class="badge badge-danger">Cancelled</span>';
+          if (v === 'PENDING_PAYMENT')  return '<span class="badge badge-warning">Awaiting payment</span>';
+          if (v === 'PLACED')           return '<span class="badge badge-success">Confirmed</span>';
+          return '<span class="badge">' + v + '</span>';
+        };
+        body.innerHTML = orders.map(o => `
+          <tr>
+            <td>#CC-${o.ORDER_ID}</td>
+            <td>${o.ITEMS_SUMMARY || '—'}</td>
+            <td>${o.TIME_SLOT || '—'}</td>
+            <td>$${parseFloat(o.TOTAL_AMOUNT || 0).toFixed(2)}</td>
+            <td>${badge(o.STATUS)}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#c62828;padding:24px;">'
+          + err.message + '</td></tr>';
+      }
+    }
+
+    async function loadAdminStats() {
+      const traders   = document.getElementById('stat-traders');
+      const tradersSub= document.getElementById('stat-traders-sub');
+      const customers = document.getElementById('stat-customers');
+      const ordersToday = document.getElementById('stat-orders-today');
+      const revenueWeek = document.getElementById('stat-revenue-week');
+      try {
+        const res = await fetch('../../api/get-admin-stats.php', { credentials: 'include' });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.success) throw new Error(data.message || ('HTTP ' + res.status));
+        const s = data.stats || {};
+        const fmt = n => '$' + (Number(n) || 0).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        traders.textContent     = s.TOTAL_TRADERS     ?? 0;
+        tradersSub.textContent  = (s.ACTIVE_SHOPS ?? 0) + ' active shop' + ((Number(s.ACTIVE_SHOPS) === 1) ? '' : 's');
+        customers.textContent   = s.TOTAL_CUSTOMERS   ?? 0;
+        ordersToday.textContent = s.ORDERS_TODAY      ?? 0;
+        revenueWeek.textContent = fmt(s.REVENUE_THIS_WEEK);
+      } catch (err) {
+        [traders, customers, ordersToday, revenueWeek].forEach(el => el.textContent = '—');
+        tradersSub.textContent = err.message;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      applyAdminProfile();
+      loadAdminStats();
+      loadPendingProducts();
+      loadRecentOrders();
+    });
+  </script>
+</body>
+</html>

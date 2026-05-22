@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Log in — Cobble Cart</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .login-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(420px, 480px);
+      min-height: calc(100vh - 60px);
+    }
+    @media (max-width: 880px) {
+      .login-layout { grid-template-columns: 1fr; }
+      .login-hero { display: none; }
+    }
+    .login-hero {
+      background: linear-gradient(135deg, #3a2e1e 0%, #6b4a25 60%, #b07a35 100%);
+      color: var(--white);
+      padding: 56px 56px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+    .login-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 20% 80%, rgba(255,255,255,0.08) 0, transparent 50%),
+                  radial-gradient(circle at 80% 10%, rgba(255,255,255,0.06) 0, transparent 50%);
+      pointer-events: none;
+    }
+    .login-hero .hero-brand {
+      font-size: 14px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      opacity: 0.85;
+      position: relative;
+    }
+    .login-hero h1 {
+      font-size: 38px;
+      line-height: 1.15;
+      font-weight: 700;
+      margin: 24px 0 16px;
+      position: relative;
+    }
+    .login-hero h1 em { color: #f0a020; font-style: normal; }
+    .login-hero p {
+      font-size: 15px;
+      line-height: 1.7;
+      opacity: 0.92;
+      max-width: 420px;
+      position: relative;
+    }
+    .hero-features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px 20px;
+      margin-top: 36px;
+      position: relative;
+    }
+    .hero-feature {
+      font-size: 13px;
+      line-height: 1.5;
+      opacity: 0.92;
+    }
+    .hero-feature strong { display: block; color: #f0c060; margin-bottom: 2px; font-size: 13px; }
+    .hero-footnote {
+      font-size: 12px;
+      opacity: 0.65;
+      position: relative;
+      letter-spacing: 0.5px;
+    }
+
+    .login-pane {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 32px;
+      background: #fafafa;
+    }
+    .auth-box {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 36px 36px 28px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 12px 32px rgba(40, 30, 15, 0.06);
+    }
+    .auth-box h2 { font-size: 22px; font-weight: 700; margin-bottom: 6px; color: var(--dark); }
+    .auth-box .sub { font-size: 13px; color: var(--grey-mid); margin-bottom: 26px; }
+    .auth-footer { text-align: center; margin-top: 18px; font-size: 13px; color: var(--grey-mid); }
+    .auth-footer a { color: var(--orange-dark); font-weight: 600; }
+    .forgot-link { font-size: 12px; color: var(--grey-mid); text-align: right; display: block; margin-top: -8px; margin-bottom: 16px; }
+
+    .test-accounts {
+      background: #fdf6e3;
+      border: 1px solid #f0d99a;
+      border-radius: 10px;
+      padding: 14px 14px 8px;
+      margin-bottom: 22px;
+    }
+    .test-accounts h4 {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      color: #8a6512;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .test-accounts h4 .hint { font-weight: 500; text-transform: none; letter-spacing: 0; color: #b08840; }
+    .account-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      color: #5a4318;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .account-row:hover { background: rgba(176, 122, 53, 0.12); }
+    .account-row .role { font-weight: 600; color: #4a3818; font-size: 12px; }
+    .account-row .email { font-family: 'Courier New', monospace; color: #6b4a25; font-size: 12px; }
+    .account-row .pwhint { font-size: 11px; color: #b08840; font-weight: 500; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+            <a href="../index.html" class="navbar-logo">
+      <img src="../images/logo-full.png" class="site-logo" alt="Cobble Cart">
+    </a>
+      <a href="../index.html" class="site-name">Cobble<em>Cart</em></a>
+    </div>
+    <div class="navbar-actions">
+      <a href="register.html" class="btn btn-primary">Register</a>
+    </div>
+  </nav>
+
+  <div class="login-layout">
+    <!-- Heritage side panel -->
+    <aside class="login-hero">
+      <div>
+        <div class="hero-brand">Cobble Cart · Cleckhuddersfax</div>
+        <h1>Welcome back to your <em>local</em> high street.</h1>
+        <p>Five family-run shops, one basket, one collection point. Order from the butcher, the bakery and the greengrocer in one go — your traders pack it, you pick it up.</p>
+
+        <div class="hero-features">
+          <div class="hero-feature"><strong>5 local traders</strong>One trusted basket across them all.</div>
+          <div class="hero-feature"><strong>Wed · Thu · Fri</strong>Three collection slots, 24h notice.</div>
+          <div class="hero-feature"><strong>PayPal secured</strong>Single payment, split fairly per shop.</div>
+          <div class="hero-feature"><strong>Heritage made easy</strong>Built for our community since 2026.</div>
+        </div>
+      </div>
+      <div class="hero-footnote">© 2026 Cleckhuddersfax Local Market · est. on the cobblestones</div>
+    </aside>
+
+    <!-- Login form -->
+    <div class="login-pane">
+      <div class="auth-box">
+        <h2>Sign in</h2>
+        <p class="sub">Welcome back — log in to continue shopping or manage your shop.</p>
+
+        <form id="login-form" onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label>Email address <span class="required">*</span></label>
+            <input type="email" id="email" placeholder="you@cobblecart.com" required autocomplete="username">
+            <span class="form-error" id="email-error"></span>
+          </div>
+          <div class="form-group">
+            <label>Password <span class="required">*</span></label>
+            <input type="password" id="password" placeholder="Your password" required autocomplete="current-password">
+            <span class="form-error" id="pass-error"></span>
+          </div>
+          <a href="#" class="forgot-link">Forgot your password?</a>
+          <button type="submit" class="btn btn-primary btn-full" style="padding:12px;font-size:15px;">Sign in</button>
+        </form>
+
+        <div class="auth-footer">
+          New to Cobble Cart? <a href="register.html">Create an account</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/main.js"></script>
+  <script>
+    async function handleLogin(e) {
+      e.preventDefault();
+      document.getElementById('email-error').textContent = '';
+      document.getElementById('pass-error').textContent = '';
+
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (!email || !password) {
+        document.getElementById('email-error').textContent = 'Email and password required';
+        return;
+      }
+
+      // Always start from a clean slate so a stale localStorage user (from a
+      // previous DEV/SEED login) never sits on top of a fresh real session.
+      localStorage.removeItem('cc_user');
+
+      showAlert('Logging in...', 'info');
+
+      try {
+        const res = await fetch('../../api/login.php', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.success) {
+          const msg = data.message || (res.status === 401 ? 'Incorrect email or password' : 'Login failed (HTTP ' + res.status + ')');
+          throw new Error(msg);
+        }
+
+        const role  = String(data.role || '').toLowerCase();
+        const extra = data.extra && typeof data.extra === 'object' && !Array.isArray(data.extra) ? data.extra : null;
+        const userData = {
+          user_id: data.user_id,
+          name:    data.name,
+          email:   data.email,
+          role,
+          profile_image: data.profile_image || null,
+          shop: extra ? {
+            shop_id:   parseInt(extra.SHOP_ID, 10) || null,
+            shop_name: extra.SHOP_NAME || null,
+            shop_type: extra.SHOP_TYPE || null,
+            status:    extra.STATUS    || null,
+          } : null,
+          login_time: new Date().toISOString(),
+        };
+        localStorage.setItem('cc_user', JSON.stringify(userData));
+        showAlert('Login successful!', 'success');
+        setTimeout(() => {
+          if      (role === 'admin')  window.location.href = '../admin/dashboard.html';
+          else if (role === 'trader') window.location.href = '../trader/dashboard.html';
+          else                        window.location.href = 'profile.html';
+        }, 400);
+      } catch (err) {
+        document.getElementById('pass-error').textContent = err.message;
+        showAlert(err.message || 'Login failed', 'error');
+      }
+    }
+
+    // Promote handleLogin so the form's onsubmit can call it as a normal handler
+    (function() {
+      const original = handleLogin;
+      window.handleLogin = function (e) { return original(e); };
+    })();
+  </script>
+</body>
+</html>

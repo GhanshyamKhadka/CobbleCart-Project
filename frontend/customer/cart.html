@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Basket — Cobble Cart</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="icon" href="../images/logo-page.png" type="image/png">
+  <link rel="apple-touch-icon" href="../images/logo-page.png">
+  <style>
+    .cart-layout { display: grid; grid-template-columns: 1fr 340px; gap: 24px; max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+    .summary-card { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 20px; position: sticky; top: 80px; height: fit-content; }
+    .summary-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+    .summary-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 10px; }
+    .summary-row.total { font-size: 16px; font-weight: 600; padding-top: 12px; border-top: 1px solid var(--border); margin-top: 4px; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+          <a href="../index.html" class="navbar-logo">
+      <img src="../images/logo-full.png" class="site-logo" alt="Cobble Cart">
+    </a>
+    <ul class="navbar-links">
+      <li><a href="home.html">Browse</a></li>
+      <li><a href="category.html">Categories</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <a href="profile.html" style="color:#ccc;font-size:14px;">My account</a>
+    </div>
+  </nav>
+
+  <div class="cart-layout">
+
+    <!-- Cart items -->
+    <div>
+      <h2 style="font-size:22px;font-weight:700;margin-bottom:20px;">Your basket</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Shop</th>
+              <th>Price</th>
+              <th>Quantity</th>
+              <th>Subtotal</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="cart-items">
+            <!-- Rendered by main.js renderCart() -->
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:16px;display:flex;gap:10px;">
+        <a href="home.html" class="btn btn-grey">Continue shopping</a>
+        <button onclick="clearCart()" class="btn btn-grey">Clear basket</button>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div>
+      <div class="summary-card">
+        <h3>Order summary</h3>
+        <div class="summary-row">
+          <span>Subtotal</span>
+          <span id="cart-total">$0.00</span>
+        </div>
+        <div class="summary-row">
+          <span>Delivery</span>
+          <span style="color:var(--grey-mid);">Collection only</span>
+        </div>
+        <div class="summary-row total">
+          <span>Total</span>
+          <span id="cart-grand-total">$0.00</span>
+        </div>
+        <div class="alert alert-info" style="margin-top:16px;font-size:12px;">
+          Collection slots available Wed, Thu, Fri. Minimum 24 hours notice required.
+        </div>
+        <a href="checkout.html" class="btn btn-primary btn-full" style="margin-top:12px;padding:12px;font-size:15px;text-align:center;display:block;">Proceed to checkout</a>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-bottom">&copy; 2026 Cobble Cart. All rights reserved.</div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>

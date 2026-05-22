@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Details — Cobble Cart</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="icon" href="../images/logo-page.png" type="image/png">
+  <link rel="apple-touch-icon" href="../images/logo-page.png">
+  <style>
+    .product-detail-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+    .product-image-box {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      height: 360px;
+      overflow: hidden;
+      background: var(--grey-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .product-image-box img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .product-image-placeholder { color: var(--grey-mid); font-size: 14px; }
+    .shop-tag {
+      display: inline-block;
+      background: #FFF3DC;
+      color: var(--orange-dark);
+      font-size: 12px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-bottom: 12px;
+      font-weight: 500;
+    }
+    .big-price { font-size: 28px; font-weight: 700; color: var(--orange-dark); margin-bottom: 16px; }
+    .desc { font-size: 14px; color: var(--grey-dark); margin-bottom: 20px; line-height: 1.7; }
+    .info-row { display: flex; justify-content: space-between; font-size: 13px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .info-row .label { color: var(--grey-mid); }
+    .info-row .val { font-weight: 500; }
+    .qty-selector { display: flex; align-items: center; gap: 10px; margin: 20px 0; }
+    .qty-btn { width: 36px; height: 36px; border: 1px solid var(--border); border-radius: 6px; background: var(--white); font-size: 18px; cursor: pointer; }
+    .qty-btn:hover { background: var(--grey-light); }
+    .qty-input { width: 60px; text-align: center; padding: 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 15px; font-family: var(--font); }
+    .back-link { font-size: 13px; color: var(--grey-mid); margin-bottom: 16px; display: block; padding: 24px 24px 0; max-width: 1000px; margin: 0 auto; padding-top: 24px; }
+    .back-link:hover { color: var(--orange); }
+    .not-found, .loading-msg { text-align: center; padding: 80px 20px; color: var(--grey-mid); }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+          <a href="../index.html" class="navbar-logo">
+      <img src="../images/logo-full.png" class="site-logo" alt="Cobble Cart">
+    </a>
+    <ul class="navbar-links">
+      <li><a href="home.html">Browse</a></li>
+      <li><a href="category.html">Categories</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <a href="cart.html" class="btn btn-primary">
+        Basket <span id="cart-count" style="background:var(--dark);color:#fff;border-radius:50%;padding:2px 6px;font-size:11px;margin-left:4px;">0</span>
+      </a>
+    </div>
+  </nav>
+
+  <a href="home.html" class="back-link">← Back to shop</a>
+
+  <div id="loading" class="loading-msg">Loading product…</div>
+
+  <div class="product-detail-layout" id="product-layout" style="display:none;">
+    <div class="product-image-box" id="product-image-box">
+      <img id="product-img" src="" alt="" style="display:none;">
+      <div id="product-image-placeholder" class="product-image-placeholder" style="display:none;">No image available</div>
+    </div>
+    <div id="product-info"></div>
+  </div>
+
+  <div id="not-found" style="display:none;" class="not-found">
+    <h2>Product not found</h2>
+    <a href="home.html" class="btn btn-primary" style="margin-top:16px;display:inline-block;">Back to shop</a>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-bottom">&copy; 2026 Cobble Cart. All rights reserved.</div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+  <script>
+    function escapeHtml(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c =>
+        ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])
+      );
+    }
+
+    async function loadProduct() {
+      const params = new URLSearchParams(window.location.search);
+      const pid = parseInt(params.get('id'), 10);
+
+      if (!Number.isInteger(pid) || pid <= 0) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('not-found').style.display = 'block';
+        return;
+      }
+
+      try {
+        const res = await fetch('../../api/get-products.php?product_id=' + pid, { credentials: 'include' });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message || 'Failed');
+        const row = (data.products || [])[0];
+        if (!row) {
+          document.getElementById('loading').style.display = 'none';
+          document.getElementById('not-found').style.display = 'block';
+          return;
+        }
+
+        const product = {
+          id:       Number(row.PRODUCT_ID),
+          name:     row.NAME,
+          shop:     row.SHOP_NAME,
+          price:    getEffectivePrice(row),
+          originalPrice: Number(row.PRICE) || 0,
+          offerPercent:  Number(row.OFFER_PERCENT) || 0,
+          qty:      row.QUANTITY_PER_ITEM || '',
+          stock:    Number(row.STOCK_QUANTITY) || 0,
+          minOrder: Number(row.MIN_ORDER) || 1,
+          maxOrder: Number(row.MAX_ORDER) || 10,
+          allergy:  row.ALLERGY_INFO || 'None',
+          image:    row.PRODUCT_IMAGE || '',
+          desc:     row.DESCRIPTION || '',
+        };
+
+        document.title = product.name + ' — Cobble Cart';
+
+        const imgEl = document.getElementById('product-img');
+        const placeholder = document.getElementById('product-image-placeholder');
+        if (product.image) {
+          imgEl.src = '../' + product.image;
+          imgEl.alt = product.name;
+          imgEl.style.display = 'block';
+          imgEl.onerror = () => {
+            imgEl.style.display = 'none';
+            placeholder.style.display = 'block';
+          };
+        } else {
+          placeholder.style.display = 'block';
+        }
+
+        const stockLabel = product.stock <= 0
+          ? '<span style="color:#c62828;">Out of stock</span>'
+          : (product.stock < 10 ? `Only ${product.stock} left` : 'In stock');
+
+        document.getElementById('product-info').innerHTML =
+          `<span class="shop-tag">${escapeHtml(product.shop)}</span>` +
+          `<h1 style="font-size:26px;font-weight:700;margin-bottom:10px;">${escapeHtml(product.name)}</h1>` +
+          `<div class="big-price">${renderPrice(product)}</div>` +
+          (product.desc ? `<p class="desc">${escapeHtml(product.desc)}</p>` : '') +
+          `<div class="info-row"><span class="label">Quantity per item</span><span class="val">${escapeHtml(product.qty)}</span></div>` +
+          `<div class="info-row"><span class="label">Stock</span><span class="val">${stockLabel}</span></div>` +
+          `<div class="info-row"><span class="label">Min order</span><span class="val">${product.minOrder}</span></div>` +
+          `<div class="info-row"><span class="label">Max order</span><span class="val">${product.maxOrder}</span></div>` +
+          `<div class="info-row"><span class="label">Allergy information</span><span class="val">${escapeHtml(product.allergy)}</span></div>` +
+          `<div class="qty-selector">` +
+            `<button class="qty-btn" onclick="changeQty(-1)">−</button>` +
+            `<input type="number" class="qty-input" id="quantity" value="${product.minOrder}" min="${product.minOrder}" max="${product.maxOrder}">` +
+            `<button class="qty-btn" onclick="changeQty(1)">+</button>` +
+          `</div>` +
+          `<button class="btn btn-primary" style="width:100%;padding:12px;font-size:16px;${product.stock <= 0 ? 'opacity:0.5;cursor:not-allowed;' : ''}" ${product.stock <= 0 ? 'disabled' : ''} onclick="handleAdd()">` +
+            `${product.stock <= 0 ? 'Out of stock' : 'Add to basket'}` +
+          `</button>`;
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('product-layout').style.display = 'grid';
+
+        window.changeQty = function(delta) {
+          const input = document.getElementById('quantity');
+          const newVal = parseInt(input.value, 10) + delta;
+          if (newVal >= product.minOrder && newVal <= product.maxOrder) input.value = newVal;
+        };
+
+        window.handleAdd = function() {
+          const qty = parseInt(document.getElementById('quantity').value, 10);
+          for (let i = 0; i < qty; i++) {
+            addToCart(product.id, product.name, product.price, product.shop, {
+              originalPrice: product.originalPrice,
+              offerPercent: product.offerPercent
+            });
+          }
+        };
+      } catch (err) {
+        document.getElementById('loading').textContent = 'Could not load product: ' + err.message;
+      }
+    }
+
+    loadProduct();
+  </script>
+</body>
+</html>

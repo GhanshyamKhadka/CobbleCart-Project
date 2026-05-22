@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Collection Slots - Cobble Cart</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .slots-wrapper {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 40px 24px 100px;
+    }
+    .day-section { margin-bottom: 28px; }
+    .day-label {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--dark);
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .slot-option {
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      cursor: pointer;
+      margin-bottom: 10px;
+      transition: all 0.2s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--white);
+      gap: 16px;
+    }
+    .slot-option:hover { border-color: var(--orange); }
+    .slot-option.selected { border-color: var(--orange); background: #FFF3DC; }
+    .slot-option.full { opacity: 0.5; cursor: not-allowed; background: #fafafa; }
+    .slot-left .time { font-size: 16px; font-weight: 600; color: var(--dark); }
+    .slot-left .date { font-size: 12px; color: var(--grey-mid); margin-top: 2px; }
+    .slot-right { text-align: right; flex: 0 0 auto; }
+    .slot-right .avail { font-size: 13px; color: var(--grey-mid); }
+    .slot-right .bar-wrap { width: 120px; height: 5px; background: #e0e0e0; border-radius: 3px; margin-top: 6px; }
+    .slot-right .bar-fill { height: 100%; border-radius: 3px; background: var(--orange); }
+    .full-tag { font-size: 12px; color: #c62828; font-weight: 500; }
+    .confirm-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--white);
+      border-top: 1px solid var(--border);
+      padding: 16px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 99;
+    }
+    .confirm-bar .selected-info { font-size: 14px; color: var(--grey-dark); }
+    .confirm-bar strong { color: var(--dark); }
+    @media (max-width: 640px) {
+      .slot-option, .confirm-bar { align-items: flex-start; flex-direction: column; }
+      .slot-right { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="../index.html" class="navbar-logo">
+      <img src="../images/logo-full.png" class="site-logo" alt="Cobble Cart">
+    </a>
+    <a href="../index.html" class="site-name">Cobble<em>Cart</em></a>
+    <div class="navbar-actions">
+      <a href="checkout.html" class="btn btn-grey">Back to checkout</a>
+    </div>
+  </nav>
+
+  <div class="slots-wrapper">
+    <div style="margin-bottom:24px;">
+      <h1 style="font-size:24px;font-weight:700;margin-bottom:6px;">Select collection slot</h1>
+      <p style="font-size:14px;color:var(--grey-mid);">Choose a Wednesday, Thursday, or Friday collection slot. Orders need at least 24 hours notice, and each slot can take 20 orders.</p>
+    </div>
+
+    <div class="alert alert-info" style="margin-bottom:24px;">
+      Available windows are 10:00-13:00, 13:00-16:00, and 16:00-19:00.
+    </div>
+
+    <div id="slots-container">
+      <p style="font-size:13px;color:var(--grey-mid);">Loading available slots...</p>
+    </div>
+  </div>
+
+  <div class="confirm-bar">
+    <div class="selected-info">Selected: <strong id="slot-display">No slot selected</strong></div>
+    <button onclick="confirmSlot()" class="btn btn-primary" style="padding:10px 28px;">Confirm slot</button>
+  </div>
+
+  <script src="../js/main.js"></script>
+  <script>
+    let chosenSlot = null;
+
+    function escapeHtml(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    function selectSlot(el, slotId, slotLabel) {
+      if (el.classList.contains('full')) return;
+      document.querySelectorAll('.slot-option').forEach(s => s.classList.remove('selected'));
+      el.classList.add('selected');
+      chosenSlot = slotId;
+      document.getElementById('slot-display').textContent = slotLabel;
+    }
+
+    function confirmSlot() {
+      if (!chosenSlot) {
+        showAlert('Please select a slot first', 'error');
+        return;
+      }
+      localStorage.setItem('cobblecart_slot', chosenSlot);
+      showAlert('Slot confirmed. Proceeding to payment...', 'success');
+      setTimeout(() => window.location.href = 'checkout.html', 800);
+    }
+
+    async function loadSlots() {
+      const container = document.getElementById('slots-container');
+      try {
+        const res = await fetch('../../api/get-slots.php', { credentials: 'include' });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message || 'Failed to load slots');
+        if (!data.slots || data.slots.length === 0) {
+          container.innerHTML = '<p style="font-size:13px;color:#c62828;">No collection slots are currently available.</p>';
+          return;
+        }
+
+        const byDate = {};
+        for (const s of data.slots) {
+          const k = s.COLLECTION_DATE;
+          if (!byDate[k]) byDate[k] = { label: String(s.DATE_LABEL || k).replace(/\s+/g, ' ').trim(), rows: [] };
+          byDate[k].rows.push(s);
+        }
+
+        const previousSelected = parseInt(localStorage.getItem('cobblecart_slot') || '0', 10);
+        let html = '';
+        for (const date of Object.keys(byDate)) {
+          html += '<div class="day-section"><div class="day-label">' + escapeHtml(byDate[date].label) + '</div>';
+          for (const s of byDate[date].rows) {
+            const taken = Number(s.TAKEN) || 0;
+            const max = Number(s.MAX_ORDERS) || 20;
+            const pct = Math.min(100, Math.round(taken / max * 100));
+            const isFull = taken >= max;
+            const label = byDate[date].label + ', ' + s.TIME_SLOT;
+            const selected = Number(s.SLOT_ID) === previousSelected && !isFull;
+            html += `
+              <div class="slot-option${isFull ? ' full' : ''}${selected ? ' selected' : ''}" data-slot="${s.SLOT_ID}" ${isFull ? '' : `onclick="selectSlot(this, ${s.SLOT_ID}, '${label.replace(/'/g, "\\'")}')"`}>
+                <div class="slot-left">
+                  <div class="time">${escapeHtml(s.TIME_SLOT)}</div>
+                  <div class="date">${escapeHtml(byDate[date].label)}</div>
+                </div>
+                <div class="slot-right">
+                  <div class="${isFull ? 'full-tag' : 'avail'}">${isFull ? 'Fully booked' : taken + ' of ' + max + ' taken'}</div>
+                  <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%;${isFull ? 'background:#c62828;' : ''}"></div></div>
+                </div>
+              </div>`;
+            if (selected && !isFull) {
+              chosenSlot = Number(s.SLOT_ID);
+              document.getElementById('slot-display').textContent = label;
+            }
+          }
+          html += '</div>';
+        }
+        container.innerHTML = html;
+      } catch (err) {
+        container.innerHTML = '<p style="font-size:13px;color:#c62828;">Could not load slots: ' + escapeHtml(err.message) + '</p>';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadSlots);
+  </script>
+</body>
+</html>

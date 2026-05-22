@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Categories — Cobble Cart</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="icon" href="../images/logo-page.png" type="image/png">
+  <link rel="apple-touch-icon" href="../images/logo-page.png">
+  <style>
+    .category-hero {
+      background: var(--dark);
+      padding: 50px 40px;
+      text-align: center;
+      color: var(--white);
+    }
+    .category-hero h2 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+    .category-hero p { font-size: 14px; color: #aaa; }
+    .categories-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 20px;
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 24px;
+    }
+    .category-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 30px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: block;
+    }
+    .category-card:hover {
+      border-color: var(--orange);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      transform: translateY(-2px);
+    }
+    .category-card.selected {
+      border-color: var(--orange);
+      background: #FFF3DC;
+    }
+    .category-icon {
+      font-size: 40px;
+      margin-bottom: 14px;
+      display: block;
+    }
+    .category-card h3 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .category-card p {
+      font-size: 12px;
+      color: var(--grey-mid);
+      margin-bottom: 8px;
+    }
+    .category-card .product-count {
+      font-size: 12px;
+      color: var(--orange-dark);
+      font-weight: 500;
+    }
+    .section-title-bar {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .section-title-bar h3 { font-size: 18px; font-weight: 600; }
+    .section-title-bar a { font-size: 13px; color: var(--orange-dark); }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+          <a href="../index.html" class="navbar-logo">
+      <img src="../images/logo-full.png" class="site-logo" alt="Cobble Cart">
+    </a>
+    <ul class="navbar-links">
+      <li><a href="home.html">Browse</a></li>
+      <li><a href="category.html">Categories</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <a href="profile.html" style="color:#ccc;font-size:14px;">My account</a>
+      <a href="cart.html" class="btn btn-primary">
+        Basket <span id="cart-count" style="background:var(--dark);color:#fff;border-radius:50%;padding:2px 6px;font-size:11px;margin-left:4px;">0</span>
+      </a>
+    </div>
+  </nav>
+
+  <div class="category-hero">
+    <h2>Browse by shop</h2>
+    <p>Click a trader to see their products</p>
+  </div>
+
+  <div class="categories-grid">
+    <a href="home.html?shop=butcher" class="category-card" onclick="selectCategory(this, 'butcher')">
+      <span class="category-icon">🥩</span>
+      <h3>Butcher</h3>
+      <p>Fresh cuts, meats and poultry</p>
+      <span class="product-count" data-shop-count="butcher">Loading...</span>
+    </a>
+    <a href="home.html?shop=greengrocer" class="category-card" onclick="selectCategory(this, 'greengrocer')">
+      <span class="category-icon">🥬</span>
+      <h3>Greengrocer</h3>
+      <p>Fresh fruit and vegetables</p>
+      <span class="product-count" data-shop-count="greengrocer">Loading...</span>
+    </a>
+    <a href="home.html?shop=fishmonger" class="category-card" onclick="selectCategory(this, 'fishmonger')">
+      <span class="category-icon">🐟</span>
+      <h3>Fishmonger</h3>
+      <p>Fresh fish and seafood</p>
+      <span class="product-count" data-shop-count="fishmonger">Loading...</span>
+    </a>
+    <a href="home.html?shop=bakery" class="category-card" onclick="selectCategory(this, 'bakery')">
+      <span class="category-icon">🍞</span>
+      <h3>Bakery</h3>
+      <p>Freshly baked bread and pastries</p>
+      <span class="product-count" data-shop-count="bakery">Loading...</span>
+    </a>
+    <a href="home.html?shop=delicatessen" class="category-card" onclick="selectCategory(this, 'delicatessen')">
+      <span class="category-icon">🧀</span>
+      <h3>Delicatessen</h3>
+      <p>Fine deli produce and cheeses</p>
+      <span class="product-count" data-shop-count="delicatessen">Loading...</span>
+    </a>
+  </div>
+
+  <div style="max-width:1100px;margin:0 auto;padding:0 24px 40px;">
+    <div class="section-title-bar">
+      <h3>Featured products</h3>
+      <a href="home.html">View all products</a>
+    </div>
+    <div class="products-grid" id="featured-grid"></div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-bottom">&copy; 2026 Cobble Cart. All rights reserved.</div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+  <script>
+    function selectCategory(el, shop) {
+      document.querySelectorAll('.category-card').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+
+    function renderProductCounts(products) {
+      const counts = products.reduce((acc, product) => {
+        const shopType = (product.SHOP_TYPE || '').toLowerCase();
+        acc[shopType] = (acc[shopType] || 0) + 1;
+        return acc;
+      }, {});
+
+      document.querySelectorAll('[data-shop-count]').forEach(el => {
+        const count = counts[el.dataset.shopCount] || 0;
+        el.textContent = count + ' ' + (count === 1 ? 'product' : 'products');
+      });
+    }
+
+    async function loadFeaturedProducts() {
+      const grid = document.getElementById('featured-grid');
+      grid.innerHTML = '<p style="color:var(--grey-mid);font-size:14px;">Loading featured products...</p>';
+      try {
+        const res = await fetch('../../api/get-products.php', { credentials: 'include' });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message || 'Failed to load products');
+        const products = data.products || [];
+        renderProductCounts(products);
+        const featured = products.slice(0, 4).map(row => ({
+          id: Number(row.PRODUCT_ID),
+          name: row.NAME,
+          shop: row.SHOP_NAME,
+          price: getEffectivePrice(row),
+          originalPrice: Number(row.PRICE) || 0,
+          offerPercent: Number(row.OFFER_PERCENT) || 0,
+          image: row.PRODUCT_IMAGE || ''
+        }));
+        grid.innerHTML = featured.map(p => `
+          <div class="product-card" onclick="window.location='product-details.html?id=${p.id}'">
+            <div class="product-img">
+              ${p.image ? `<img src="../${p.image}" alt="${p.name}">` : '<div style="height:160px;display:flex;align-items:center;justify-content:center;color:#888;font-size:13px;">No image</div>'}
+            </div>
+            <div class="product-info">
+              <div class="product-name">${p.name}</div>
+              <div class="product-shop">${p.shop}</div>
+              <div class="product-price">${renderPrice(p)}</div>
+              <button class="btn btn-primary btn-full" onclick="event.stopPropagation(); addToCart(${p.id}, ${JSON.stringify(p.name)}, ${p.price}, ${JSON.stringify(p.shop)}, { originalPrice: ${p.originalPrice}, offerPercent: ${p.offerPercent} })">Add to basket</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        document.querySelectorAll('[data-shop-count]').forEach(el => {
+          el.textContent = '0 products';
+        });
+        grid.innerHTML = '<p style="color:#c62828;font-size:14px;">Could not load featured products: ' + err.message + '</p>';
+      }
+    }
+
+    loadFeaturedProducts();
+  </script>
+</body>
+</html>
